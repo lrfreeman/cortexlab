@@ -1,10 +1,11 @@
+#This script is uses to decide whether the mouse is licking or not, and which spout
+import process_tongue_data as p
 from process_tongue_data import *
 
 #Change file name to run function
-df = is_licking("/Users/laurence/Desktop/Neuroscience/mproject/Data/402.csv")
+df = process_data("/Users/laurence/Desktop/Neuroscience/mproject/Data/402.csv")
 
 #Filter----------------------------------------------------------------
-    # is_lickingv = df.loc[(df['C_Tongue'] >= 0.99) & (df['FO_Tongue'] >= 0.99)]
-    # print(is_lickingv)
-
-    #test chdhfd
+def is_licking(processed_data_frame):
+    df = df.loc[(df['C_Tongue'] >= 0.99) & (df['FO_Tongue'] >= 0.99)]
+print(df)
