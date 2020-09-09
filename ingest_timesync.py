@@ -14,17 +14,27 @@ right_rewards = [[row.flat[0] for row in line] for line in mat_dict["data"][0][0
 violations = [[row.flat[0] for row in line] for line in mat_dict["data"][0][0]["violations"]]
 reward_times = [[row.flat[0] for row in line] for line in mat_dict["data"][0][0]["rewardTimes"]]
 trial_start_times = [[row.flat[0] for row in line] for line in mat_dict["data"][0][0]["trialstartTimes"]]
+nTrials = [[row.flat[0] for row in line] for line in mat_dict["data"][0][0]["nTrials"]]
 
 #variables with not same lenght
 spiketimes = mat_dict["data"][0][0]["spiketimes"]
-# spiketimes = np.spiketimes
+# spiketimes = [[row.flat[0] for row in line] for line in mat_dict["data"][0][0]["spiketimes"]]
+# print(spiketimes)
 
 #Convert to df
 df = pd.DataFrame(left_choices + free + left_rewards + right_rewards + violations + reward_times + trial_start_times).T
 df.columns = ["left_choices","free", "left_rewards","right_rewards","violations", "reward_times", "trial_start_times"]
 # print(df)
 
-#Make PSTH for a given variable
-# df.plot(x="reward_times",y="left_rewards")
-# # plt.ylabel("Proability")
-# plt.show()
+#In neuroscience the peristimulus time histogram (PSTH) is used to visualize the
+#timing of neuronal spiking relative to a given stimulus. To do so one divides the stimulus period
+#into a defined number of bins and counts the spikes which occur in each bin for a given trial.
+#Make PSTH for a given variable - Peristimulus time histogram
+bin_width = 1000
+#histogram function takes in bins / bin width, time between two stimuli and spike times
+hist, bins = np.histogram(spiketimes, bins = bin_width)
+plt.hist(spiketimes, bins)
+plt.title("Histogram")
+plt.xlabel("Spike Times [ms?]")
+plt.ylabel("Count of Spikes")
+plt.show()
