@@ -10,3 +10,5 @@ Is_Licking - Takes in the output from Deep Lab Cut and applies additional logic 
 Process_data - Takes in the raw CSV output from Deep Lab Cut and Processes it for the Is_Licking script
 
 Ingest_Time_Sync - Takes in a combination of kilosorted eletrophysiology data and the output from Is_Licking in order to remove licking artefacts from the physiology data inorder to focus on the neural correlates of reward. 
+
+![Drag Racing](Dragster.jpg)
