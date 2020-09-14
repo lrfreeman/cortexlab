@@ -49,7 +49,6 @@ def process_data_spout(file):
                            "C_T_X", "C_T_Y", "C_T_L",
                            "F_E_X", "F_E_Y", "F_E_L"]
     df = df.drop([1])
-    print(df)
     return(df)
 
 # process_data_spout(test_file)

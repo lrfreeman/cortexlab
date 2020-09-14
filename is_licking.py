@@ -8,22 +8,22 @@ import sys
 
 def is_licking(video_path):
     #Change file name to run function
-    df = process_data(video_path)
+    df = process_data_spout(video_path)
     #Filter----------------------------------------------------------------
-    df = df.loc[(df['C_Tongue'] >= 0.99) & (df['FO_Tongue'] >= 0.99)
-               |(df['C_Tongue'] >= 0.99) & (df['R_Tongue'] >= 0.99)
-               |(df['C_Tongue'] >= 0.99) & (df['L_Tongue'] >= 0.99)
-               |(df['L_Tongue'] >= 0.99) & (df['R_Tongue'] >= 0.99)
-               |(df['L_Tongue'] >= 0.99) & (df['FO_Tongue'] >= 0.99)
-               |(df['R_Tongue'] >= 0.99) & (df['FO_Tongue'] >= 0.99)]
+    df = df.loc[(df['C_T_L'] >= 0.99) & (df['F_E_L'] >= 0.99)
+               |(df['C_T_L'] >= 0.99) & (df['RE_T_L'] >= 0.99)
+               |(df['C_T_L'] >= 0.99) & (df['LE_T_L'] >= 0.99)
+               |(df['LE_T_L'] >= 0.99) & (df['RE_T_L'] >= 0.99)
+               |(df['LE_T_L'] >= 0.99) & (df['F_E_L'] >= 0.99)
+               |(df['RE_T_L'] >= 0.99) & (df['F_E_L'] >= 0.99)]
 
     #Plot probability of tongue licking------------------------------------
-    # df.plot(x='Frames',y= ['L_Tongue','R_Tongue','FO_Tongue','C_Tongue'])
+    # df.plot(x='Frames',y= ['LE_T_L','RE_T_L','F_E_L','C_T_L'])
     # plt.ylabel("Proability")
     # plt.show()
 
     #What frames is the mouse is licking?
-    frame_is_licking = df.iloc[:,-1].values
+    frame_is_licking = df.iloc[:,0].values
     print()
     print("The mouse is licking at these specifc frames:")
     print()
