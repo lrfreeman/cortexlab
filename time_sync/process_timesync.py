@@ -6,9 +6,13 @@ import sys
 import math
 import seaborn as sb
 
+def left_bound():
+    return row.left
+
 def process_timesync_data():
     #Load_mat_file
     df, spike_times = convert_mat('/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat')
+    trial_df = df
 
     #Set variables
     #Spike_times is a numpy.ndarray
@@ -31,8 +35,6 @@ def process_timesync_data():
 
     #Create new column and substract trial start time from each spike time
     # print(type(spike_df["Trial"][386828].left))
-    def left_bound():
-        return row.left
     spike_df["Lower Bound"] = (spike_df["Trial"].apply(lambda x: x.left))
     spike_df["Lower Bound"] = spike_df["Lower Bound"].astype(float)
     spike_df["Normalised Spike Times"] = spike_df["Spike_Times"] - spike_df["Lower Bound"]
@@ -46,32 +48,18 @@ def process_timesync_data():
     spike_df["Trial ID"] = spike_df["Lower Bound"].apply(trunc)
     df["Trial ID"] = df["trial_start_times"].apply(trunc)
     df = spike_df.merge(df, on="Trial ID")
-    df.drop(columns=['nTrials'])
+    df = df.drop(columns=['nTrials'])
 
-    return(df)
+    return(df, trial_df)
 
-# # Split trial types
-# left_reward_trials = df.loc[(df['left_rewards'] == 1)
-#                          & (df['right_rewards'] == 0)]
-# right_reward_trials = df.loc[(df['left_rewards'] == 0)
-#                          & (df['right_rewards'] == 1)]
-# no_reward = df.loc[(df['left_rewards'] == 0)
-#                          & (df['right_rewards'] == 0)]
-# both_rewards = df.loc[(df['left_rewards'] == 1)
-#                          & (df['right_rewards'] == 1)]
+# spike_df, trial_df = process_timesync_data()
+# # Calculate firing rate
+# # Create a bin list of seconds up to 5000 seconds assuming a trial will never be that long
+# bins = list(range(0,5000))
+# spike_df["Spike Bins"] = pd.cut(spike_df["Normalised Spike Times"], bins)
 #
-# #Peristimulus time histogram (PSTH) visualization
-# bins = 100
-# fig, ax = plt.subplots()
-# sb.distplot(left_reward_trials["Normalised Spike Times"],bins = bins,label="Left Reward",hist=False)
-# sb.distplot(right_reward_trials["Normalised Spike Times"],bins = bins,label="Right Reward",hist=False)
-# sb.distplot(no_reward["Normalised Spike Times"],bins = bins,label="No Reward",hist=False)
-# sb.distplot(both_rewards["Normalised Spike Times"],bins = bins,label="Both Reward",hist=False)
-#
-# ax.legend()
-#
-# # plt.hist(spike_df["Normalised Spike Times"], bins = bins, histtype='step')
-# plt.title("Peristimulus time histogram (PSTH)")
-# plt.xlabel("Time from stimulus onset [s]")
-# plt.ylabel("Count of Spikes")
-# plt.show()
+# # print(df.head())
+# print("")
+# print("############################~~~~~~~~~~~~~#####################")
+# print("")
+# print(spike_df["Spike Bins"])
