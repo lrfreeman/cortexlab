@@ -10,3 +10,12 @@ DeepLabCut is an open source deep learning computer vision package which uses tr
 <p align="center">
   <img width="632" alt="Screenshot 2020-09-13 at 19 06 06" src="https://user-images.githubusercontent.com/22481774/93025251-42d06380-f5f4-11ea-9c74-55b89145c3c3.png">
 </p>
+
+## Ephys
+Python software that inputs kilosorted electrophysiology data, manipulates the data and generates data visulisations such as peristimulus time histograms across 100's of trials and millions of neuronal spikes.
+
+<p align="center">
+  <img width="980" alt="Screenshot 2020-10-09 at 06 35 35" src="https://user-images.githubusercontent.com/22481774/95548619-61f8c000-09fd-11eb-8582-cffa798ecd25.png">
+</p>
+
+
