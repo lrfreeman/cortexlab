@@ -31,15 +31,11 @@ sb.histplot(no_reward["lock"],label="No_rewards",
             stat="frequency",element="poly",fill=False,binwidth=0.1)
 sb.histplot(both_rewards["lock"],label="Both Rewards",
             stat="frequency",element="poly",fill=False,binwidth=0.1)
-
-# sb.distplot(left_reward_trials["lock"],label="Left Reward",hist=True)
-# sb.distplot(right_reward_trials["lock"],label="Right Reward",hist=False)
-# sb.distplot(no_reward["lock"],label="No Reward",hist=False)
-# sb.distplot(both_rewards["lock"],label="Both Rewards",hist=False)
 ax.legend()
 plt.title("Peristimulus time histogram (PSTH) for each trial type across all cells")
 plt.xlabel("Time from Outcome [s] (Reward Time - Spike Time)")
 plt.xlim(right=7)
 plt.xlim(left=-2)
+#No longer spikes per second as bin width is 100ms need to x10
 plt.ylabel("Firing Rate (sp/s)")
 plt.show()

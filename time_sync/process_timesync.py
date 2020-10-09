@@ -37,7 +37,6 @@ def process_timesync_data():
     # print(type(spike_df["Trial"][386828].left))
     spike_df["Lower Bound"] = (spike_df["Trial"].apply(lambda x: x.left))
     spike_df["Lower Bound"] = spike_df["Lower Bound"].astype(float)
-    spike_df["Normalised Spike Times"] = spike_df["Spike_Times"] - spike_df["Lower Bound"]
 
     #Remove all rows with NaN that occur before the trials start or after trials have finsished
     spike_df = spike_df.dropna()
@@ -51,15 +50,3 @@ def process_timesync_data():
     df = df.drop(columns=['nTrials'])
 
     return(df, trial_df)
-
-# spike_df, trial_df = process_timesync_data()
-# # Calculate firing rate
-# # Create a bin list of seconds up to 5000 seconds assuming a trial will never be that long
-# bins = list(range(0,5000))
-# spike_df["Spike Bins"] = pd.cut(spike_df["Normalised Spike Times"], bins)
-#
-# # print(df.head())
-# print("")
-# print("############################~~~~~~~~~~~~~#####################")
-# print("")
-# print(spike_df["Spike Bins"])
