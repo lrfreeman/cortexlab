@@ -7,7 +7,7 @@ import cv2
 import sys
 
 #Misc----------------------------------------------------------------------
-test_file = "/Users/laurence/Desktop/Neuroscience/mproject/data/Analysed_videos_CSVs_DLC/video_snippet_KM011_2020-03-19_trial91DLC_resnet50_Master_ProjectAug13shuffle1_200000.csv"
+test_file = "/Users/laurence/Desktop/Neuroscience/mproject/data/Analysed_videos_CSVs_DLC/video_snippet_KM011_2020-03-19_trial94DLC_resnet50_Master_ProjectAug13shuffle1_200000.csv"
 #Code to overlay frmes for CML
 #ffmpeg -i video.mov -vf "drawtext=fontfile=Arial.ttf: text=%{n}: x=(w-tw)/2: y=h-(2*lh): fontcolor=white: box=1: boxcolor=0x00000099" -y output.mov
 

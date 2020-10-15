@@ -11,7 +11,7 @@ def left_bound():
 
 def process_timesync_data():
     #Load_mat_file
-    df, spike_times = convert_mat('/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat')
+    df, spike_times, cluster_IDs = convert_mat('/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat')
     trial_df = df
 
     #Set variables
@@ -23,7 +23,7 @@ def process_timesync_data():
     #Create new spike_time df
     spike_df =  pd.DataFrame(spike_times, columns = ["Spike_Times"])
     spike_df["Trial"] = np.nan
-    # print(spike_time_df)
+    spike_df["Cluster ids"] = cluster_IDs
 
     #Remove limitations to printing df
     pd.set_option("display.max_rows", None, "display.max_columns", None)
@@ -40,6 +40,11 @@ def process_timesync_data():
 
     #Remove all rows with NaN that occur before the trials start or after trials have finsished
     spike_df = spike_df.dropna()
+
+    # #Test to check length of df before dropping nan columns
+    # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    # print(spike_df.tail())
+    # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
     #Merge two dataframes
     #First create an ID between each df that can be used for the merge - Use trial start time

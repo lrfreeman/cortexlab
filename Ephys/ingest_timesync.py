@@ -20,6 +20,7 @@ def convert_mat(file):
 
     #variables with not same lenght
     spiketimes = mat_dict["data"][0][0]["spiketimes"]
+    cluster_IDs = mat_dict["data"][0][0]["cluster_ids"]
     # spiketimes = [[row.flat[0] for row in line] for line in mat_dict["data"][0][0]["spiketimes"]]
 
     #Convert to df
@@ -29,4 +30,4 @@ def convert_mat(file):
     # pd.set_option('display.max_colwidth', None)
     df = pd.DataFrame(nTrials + left_choices + free + left_rewards + right_rewards + violations + reward_times + trial_start_times).T
     df.columns = ["nTrials", "left_choices","free", "left_rewards","right_rewards","violations", "reward_times", "trial_start_times"]
-    return(df,spiketimes)
+    return(df,spiketimes,cluster_IDs)
