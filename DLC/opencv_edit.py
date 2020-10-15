@@ -23,7 +23,6 @@ while(cap.isOpened()):
     print(frame_counter)
 
     # Our operations on the frame come here
-    # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     colour = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     #Grape logic
@@ -42,6 +41,7 @@ while(cap.isOpened()):
             colour[440:450,375:385] = (255, 255, 255)
 
     # Display the resulting frame
+    # Change waitkey to 0 to control speed with a button press
     cv2.imshow('frame',colour)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
