@@ -23,26 +23,27 @@ while(cap.isOpened()):
     print(frame_counter)
 
     # Our operations on the frame come here
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    colour = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     #Grape logic
     for x in grape_frames:
         if x == frame_counter:
-            gray[440:450,350:360] = 255
+            colour[440:450,350:360] = (111, 45, 168)
 
     #Cherry Logic
     for x in cherry_frames:
         if x == frame_counter:
-            gray[440:450,395:405] = 255
+            colour[440:450,395:405] = (222, 49, 99)
 
     #centre lick logic
     for x in centre_frames:
         if x == frame_counter:
-            gray[440:450,375:385] = 255
+            colour[440:450,375:385] = (255, 255, 255)
 
     # Display the resulting frame
-    cv2.imshow('frame',gray)
-    if cv2.waitKey(0) & 0xFF == ord('q'):
+    cv2.imshow('frame',colour)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 cap.release()
