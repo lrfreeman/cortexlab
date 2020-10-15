@@ -23,7 +23,7 @@ def process_timesync_data():
     #Create new spike_time df
     spike_df =  pd.DataFrame(spike_times, columns = ["Spike_Times"])
     spike_df["Trial"] = np.nan
-    spike_df["Cluster ids"] = cluster_IDs
+    spike_df["cluster_ids"] = cluster_IDs
 
     #Remove limitations to printing df
     pd.set_option("display.max_rows", None, "display.max_columns", None)
