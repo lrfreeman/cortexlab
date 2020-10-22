@@ -21,13 +21,17 @@ def convert_mat(file):
     #variables with not same lenght
     spiketimes = mat_dict["data"][0][0]["spiketimes"]
     cluster_IDs = mat_dict["data"][0][0]["cluster_ids"]
-    # spiketimes = [[row.flat[0] for row in line] for line in mat_dict["data"][0][0]["spiketimes"]]
 
     #Convert to df
-    # pd.set_option('display.max_rows', None)
-    # pd.set_option('display.max_columns', None)
-    # pd.set_option('display.width', None)
-    # pd.set_option('display.max_colwidth', None)
     df = pd.DataFrame(nTrials + left_choices + free + left_rewards + right_rewards + violations + reward_times + trial_start_times).T
     df.columns = ["nTrials", "left_choices","free", "left_rewards","right_rewards","violations", "reward_times", "trial_start_times"]
     return(df,spiketimes,cluster_IDs)
+
+#Test lenghts - Passed lenght tests
+# file = '/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat'
+# df, spiketimes, clusterid = convert_mat(file)
+# left_reward_trials =  df.loc[(df['left_rewards'] == 1)
+#                          & (df['right_rewards'] == 0)]
+# print(len(left_reward_trials))
+# print("Does spiketime length",len(spiketimes),"equal the length of original matlab file=",3850350)
+# print("Does clusterid length",len(clusterid),"equal the length of original matlab file=",3850350)

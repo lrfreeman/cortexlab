@@ -13,14 +13,19 @@ cherry_frames, grape_frames, centre_frames = is_licking_spout(df, csv)
 #Create a videocapture object to ingest the video - Insert file
 cap = cv2.VideoCapture(video)
 
-#Setting frame counter to -2 so it aligns with the frame number of each video which is 235
-frame_counter = -2
+#Setting frame counter to -1 so it aligns with the frame number of each video which is 235
+#bug warning - it should be -2 to match frame numbers, but -1 looks better....
+frame_counter = -1
+
+#Save video
+fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+out = cv2.VideoWriter('trial93DLC.avi',fourcc,7.0,(640,480),isColor=True)
 
 while(cap.isOpened()):
     # Capture frame-by-frame, ret is true or false and frame captures the frame
     ret, frame = cap.read()
     frame_counter = 1 + frame_counter
-    print(frame_counter)
+    # print(frame_counter)
 
     # Our operations on the frame come here
     colour = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -40,6 +45,9 @@ while(cap.isOpened()):
         if x == frame_counter:
             colour[440:450,375:385] = (255, 255, 255)
 
+    #output the frame
+    out.write(colour)
+
     # Display the resulting frame
     # Change waitkey to 0 to control speed with a button press
     cv2.imshow('frame',colour)
@@ -47,4 +55,5 @@ while(cap.isOpened()):
         break
 
 cap.release()
+out.release()
 cv2.destroyAllWindows()
