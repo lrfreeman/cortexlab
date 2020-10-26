@@ -1,10 +1,14 @@
 from ingest_timesync import *
+from .mproject.code.cortexlab.DLC.is_licking import *
 from matplotlib.ticker import MaxNLocator
 import numpy as np
 import matplotlib.pyplot as plt
 
 #Set the session Data
 session_data = '/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat'
+
+#Load licking data
+cherry_df, grape_df, center_df = generate_licking_times()
 
 #Function for generating a PSTH
 def generate_PSTH(file,cellID):

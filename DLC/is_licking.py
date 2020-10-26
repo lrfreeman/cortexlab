@@ -11,6 +11,9 @@ test_file = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_faceDLC_resne
 #Code to overlay frmes for CML
 #ffmpeg -i video.mov -vf "drawtext=fontfile=Arial.ttf: text=%{n}: x=(w-tw)/2: y=h-(2*lh): fontcolor=white: box=1: boxcolor=0x00000099" -y output.mov
 
+#Extend data print rows
+# pd.set_option("display.max_rows", None, "display.max_columns", None)
+
 def is_licking(csv_path):
     #Change file name to run function
     df = process_data_spout(csv_path)
@@ -55,11 +58,22 @@ def is_licking_spout(df, csv):
     centre_lick = set(frame_is_licking.flat) - set(frames_licking_cherry.flat) - set(frames_licking_grape.flat)
     return(frames_licking_cherry,frames_licking_grape,centre_lick)
 
-def create_licking_df():
+def generate_licking_times():
     df, frame_is_licking, df_len = is_licking(test_file)
     cherry_frames, grape_frames, centre_lick = is_licking_spout(df, test_file)
-    total_frames = len(df_len)
-    licking_df = pd.DataFrame(0, index=np.arange(total_frames), columns=["Cherry Lick", "Grape Lick", "Center Lick"])
-    print(licking_df)
 
-create_licking_df()
+    #adjust frames to start a 1 so there is a one off error before converting to time
+    cherry_frames = [x + 1 for x in cherry_frames]
+    grape_frames = [x + 1 for x in grape_frames]
+    center_frames = [x + 1 for x in centre_lick]
+
+    #Create three dfs
+    cherry_licking_df = pd.DataFrame(cherry_frames, columns = ["frames licking"])
+    grape_licking_df = pd.DataFrame(grape_frames, columns = ["frames licking"])
+    center_licking_df = pd.DataFrame(center_frames, columns = ["frames licking"])
+
+    # #Given 30FPS and 0.0333333 seconds per frame calculate time of lick
+    cherry_licking_df["time licking"] = cherry_licking_df["frames licking"] * 0.033333333333
+    grape_licking_df["time licking"] = grape_licking_df["frames licking"] * 0.033333333333
+    center_licking_df["time licking"] = center_licking_df["frames licking"] * 0.033333333333
+    return(cherry_licking_df, grape_licking_df, center_licking_df)
