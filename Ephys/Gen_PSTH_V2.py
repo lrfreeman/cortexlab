@@ -3,6 +3,10 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 import matplotlib.pyplot as plt
 
+#Set the session Data
+session_data = '/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat'
+
+#Function for generating a PSTH
 def generate_PSTH(file,cellID):
     #Create Trial DF
     trial_df, spike_times, cluster_IDs = convert_mat(file)
@@ -81,5 +85,33 @@ def generate_PSTH(file,cellID):
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.show()
 
-session_data = '/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat'
+#Function to generate Spike Raster
+def generate_raster(file,cellID):
+    #Create Trial DF
+    trial_df, spike_times, cluster_IDs = convert_mat(file)
+    trial_df = trial_df.drop(columns=["nTrials"])
+
+    #Create Spike and Cluster ID DF
+    spike_df =  pd.DataFrame(spike_times, columns = ["Spike_Times"])
+    spike_df["cluster_ids"] = cluster_IDs
+
+    #####Choose a cell#######
+    spike_df = spike_df.loc[(spike_df["cluster_ids"] == cellID)]
+
+    #Generate lock times
+    lock_time = {}
+    trial_spikes = {}
+    for trial in range(len(trial_df)):
+        lock_time[trial] = trial_df["reward_times"][trial]
+        trial_spikes[trial] = (spike_df["Spike_Times"] - lock_time[trial])
+    print(trial_spikes[0].values)
+
+    # Generate raster
+    plt.eventplot(trial_spikes[0].values,orientation='vertical', linewidths=0.01, linelengths=0.01)
+    plt.xlim(right=3)
+    plt.xlim(left=-1)
+    plt.show()
+
+#Generate the visulations
 generate_PSTH(session_data,1)
+# generate_raster(session_data,1)
