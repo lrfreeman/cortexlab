@@ -1,5 +1,7 @@
+from dlc.process_tongue_data import *
+from dlc.is_licking import *
 from ingest_timesync import *
-from .mproject.code.cortexlab.DLC.is_licking import *
+from dlc.is_licking import generate_licking_times
 from matplotlib.ticker import MaxNLocator
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,13 +32,23 @@ def generate_PSTH(file,cellID):
     #####Choose a cell#######
     spike_df = spike_df.loc[(spike_df["cluster_ids"] == cellID)]
 
-    # Counts of spikes per trial
-    lock_time = {}
-    spike_counts = {}
-    for trial in range(len(trial_df)):
-        lock_time[trial] = trial_df["reward_times"][trial]
-        counts, bin_edges = np.histogram(spike_df["Spike_Times"]-lock_time[trial], bins=bins)
-        spike_counts[trial] = counts
+    # A function to return counts of spikes / x per trial into bins
+    def lock_and_count(x_time):
+        lock_time = {}
+        x_counts = {}
+        for trial in range(len(trial_df)):
+            lock_time[trial] = trial_df["reward_times"][trial]
+            counts, bin_edges = np.histogram(x_time-lock_time[trial], bins=bins)
+            x_counts[trial] = counts
+        return(x_counts, bin_edges)
+
+    #Return spike
+    spike_counts, bin_edges = lock_and_count(spike_df["Spike_Times"])
+
+    #Return lick counts
+    cherry_lick_counts, x = lock_and_count(cherry_df["time licking"])
+    grape_lick_counts, y = lock_and_count(grape_df["time licking"])
+    center_lick_counts, z = lock_and_count(center_df["time licking"])
 
     #Define reward types
     cherry_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 1) & (trial_df['right_rewards'] == 0)]
@@ -44,7 +56,7 @@ def generate_PSTH(file,cellID):
     both_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 1) & (trial_df['right_rewards'] == 1)]
     no_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 0) & (trial_df['right_rewards'] == 0)]
 
-    # Seperate counts per trial type - do cherry first
+    # Seperate counts per trial type
     cherry_spike_counts = [spike_counts[x] for x in range(len(trial_df)) if list(spike_counts.keys())[x] in cherry_reward_trials.index.values]
     grape_spike_counts = [spike_counts[x] for x in range(len(trial_df)) if list(spike_counts.keys())[x] in grape_reward_trials.index.values]
     bothreward_spike_counts = [spike_counts[x] for x in range(len(trial_df)) if list(spike_counts.keys())[x] in both_reward_trials.index.values]
@@ -55,6 +67,11 @@ def generate_PSTH(file,cellID):
     grape_count = pd.DataFrame(grape_spike_counts).sum(axis=0)
     both_reward_count = pd.DataFrame(bothreward_spike_counts).sum(axis=0)
     no_reward_count = pd.DataFrame(noreward_spike_counts).sum(axis=0)
+
+    #Calculate lick counts per trial type for each bin
+    cherry_lick_count = pd.DataFrame(cherry_lick_counts).sum(axis=1)
+    grape_lick_count = pd.DataFrame(grape_lick_counts).sum(axis=1)
+    center_lick_count = pd.DataFrame(center_lick_counts).sum(axis=1)
 
     #Length of each trial type
     num_c_trials = len(cherry_spike_counts)
@@ -71,22 +88,32 @@ def generate_PSTH(file,cellID):
     bothreward_hertz = (both_reward_count / num_bothreward_trials) * 5
     noreward_hertz = (no_reward_count / num_noreward_trials) * 5
 
-    #Tests
-    # print("Do all trial lengths add up to total number of trials - 738:", num_c_trials+num_g_trials+num_bothreward_trials+num_noreward_trials)
+    #Calculate average licking rate per trial
+    avg_cherry_lick = (cherry_lick_count / len(trial_df)) * 5
+    avg_grape_lick = (grape_lick_count / len(trial_df)) * 5
+    avg_center_lick = (center_lick_count / len(trial_df)) * 5
 
     #Plot PSTH
-    fig, ax = plt.subplots()
+    fig, ax1 = plt.subplots()
     plt.plot(bin_centres,cherry_hertz, color='r', label="Cherry Reward")
     plt.plot(bin_centres,grape_hertz, color='m', label="Grape Reward")
     plt.plot(bin_centres,noreward_hertz, color='k', label="No Reward")
     plt.plot(bin_centres,bothreward_hertz, color='b', label="Both Reward")
-    ax.legend()
+    ax1.legend(loc='upper left')
     plt.title("PSTH for cluster ID 1")
     plt.xlabel("Time from Outcome [s] (Spike Time - Reward Time)")
     plt.xlim(right=3)
     plt.xlim(left=-1)
     plt.ylabel("Firing Rate (sp/s)")
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    #Adding licking to PSTH
+    ax2 = ax1.twinx()
+    ax2.plot(bin_centres, avg_cherry_lick, color='r', linestyle=":", label="Lick of cherry spout")
+    ax2.plot(bin_centres, avg_grape_lick, color='m', linestyle=":", label="Lick of grape spout")
+    ax2.plot(bin_centres, avg_center_lick, color='k', linestyle=":", label="Lick center of spouts")
+    ax2.legend(loc='upper right')
+    ax2.set_ylabel("Licking Rate (lick/s)")
     plt.show()
 
 #Function to generate Spike Raster

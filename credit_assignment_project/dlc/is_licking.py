@@ -1,7 +1,7 @@
 #Run this script with one argument in the command line. That argument should be the csv file output of DLC
 #This script is uses to decide whether the mouse is licking or not, and which spout
 import matplotlib.pyplot as plt
-from process_tongue_data import *
+from dlc.process_tongue_data import *
 import numpy as np
 import cv2
 import sys
