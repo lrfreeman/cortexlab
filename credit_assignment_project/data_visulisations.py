@@ -94,26 +94,47 @@ def generate_PSTH(file,cellID):
     avg_center_lick = (center_lick_count / len(trial_df)) * 5
 
     #Plot PSTH
-    fig, ax1 = plt.subplots()
-    plt.plot(bin_centres,cherry_hertz, color='r', label="Cherry Reward")
-    plt.plot(bin_centres,grape_hertz, color='m', label="Grape Reward")
-    plt.plot(bin_centres,noreward_hertz, color='k', label="No Reward")
-    plt.plot(bin_centres,bothreward_hertz, color='b', label="Both Reward")
-    ax1.legend(loc='upper left')
-    plt.title("PSTH for cluster ID 1")
-    plt.xlabel("Time from Outcome [s] (Spike Time - Reward Time)")
-    plt.xlim(right=3)
-    plt.xlim(left=-1)
-    plt.ylabel("Firing Rate (sp/s)")
-    ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
+    # fig, ax1 = plt.subplots()
+    # plt.plot(bin_centres,cherry_hertz, color='r', label="Cherry Reward")
+    # plt.plot(bin_centres,grape_hertz, color='m', label="Grape Reward")
+    # plt.plot(bin_centres,noreward_hertz, color='k', label="No Reward")
+    # plt.plot(bin_centres,bothreward_hertz, color='b', label="Both Reward")
+    # ax1.legend(loc='upper left')
+    # plt.title("PSTH for cluster ID 1")
+    # plt.xlabel("Time from Outcome [s] (Spike Time - Reward Time)")
+    # plt.xlim(right=3)
+    # plt.xlim(left=-1)
+    # plt.ylabel("Firing Rate (sp/s)")
+    # ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
+    #
+    # #Adding licking to PSTH
+    # ax2 = ax1.twinx()
+    # ax2.plot(bin_centres, avg_cherry_lick, color='r', linestyle=":", label="Lick of cherry spout")
+    # ax2.plot(bin_centres, avg_grape_lick, color='m', linestyle=":", label="Lick of grape spout")
+    # ax2.plot(bin_centres, avg_center_lick, color='k', linestyle=":", label="Lick center of spouts")
+    # ax2.legend(loc='upper right')
+    # ax2.set_ylabel("Licking Rate (lick/s)")
+    # plt.show()
 
-    #Adding licking to PSTH
-    ax2 = ax1.twinx()
-    ax2.plot(bin_centres, avg_cherry_lick, color='r', linestyle=":", label="Lick of cherry spout")
-    ax2.plot(bin_centres, avg_grape_lick, color='m', linestyle=":", label="Lick of grape spout")
-    ax2.plot(bin_centres, avg_center_lick, color='k', linestyle=":", label="Lick center of spouts")
+    #Plot subplots
+    fig, (ax1, ax2) = plt.subplots(2, sharex=True)
+    ax1.plot(bin_centres,cherry_hertz, color='r', label="Cherry Reward")
+    ax1.plot(bin_centres,grape_hertz, color='m', label="Grape Reward")
+    ax1.plot(bin_centres,noreward_hertz, color='k', label="No Reward")
+    ax1.plot(bin_centres,bothreward_hertz, color='b', label="Both Reward")
+    ax1.legend(loc='upper right')
+    ax1.set(title="PSTH for cluster ID 1", ylabel="Firing Rates (sp/s)")
+
+    #Licking subplot
+    ax2.plot(bin_centres, avg_cherry_lick, color='r', label="Lick of cherry spout")
+    ax2.plot(bin_centres, avg_grape_lick, color='m', label="Lick of grape spout")
+    ax2.plot(bin_centres, avg_center_lick, color='k', label="Lick center of spouts")
+    ax2.set(ylabel="Licking Rate (lick/s)",xlabel="Time from Outcome [s] (Spike Time - Reward Time)")
+    ax2.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax2.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax2.legend(loc='upper right')
-    ax2.set_ylabel("Licking Rate (lick/s)")
+
+    #Show plot
     plt.show()
 
 #Function to generate Spike Raster
