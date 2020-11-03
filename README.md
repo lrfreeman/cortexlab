@@ -5,11 +5,7 @@ Contained within this repo is all my work created during my time at the cortexla
 The project is split into multiple components: __DeepLabCut__ (A opensource deep learning computer vision library) and __Ephys__ (Electrophysiology data combined with the subsequent data analysis)
 
 ## DeepLabCut (DLC)
-DeepLabCut is an open source deep learning computer vision package which uses transfer learning from pre-trained neural networks to optimise the training time of your novel prediction task (https://www.nature.com/articles/s41593-018-0209-y). After manually classifying 100's of frames of videos, the DLC model can now predict animal movements automatically to the exact frame. This allows us to decide when a mouse is licking during a given trial. Important, so that we can remove licking artefacts from the neural ephys inorder to focus on the genuine neural correlates of reward. Below is a image of the software predicting when the mouse is licking.
-
-<p align="center">
-  <img width="632" alt="Screenshot 2020-09-13 at 19 06 06" src="https://user-images.githubusercontent.com/22481774/93025251-42d06380-f5f4-11ea-9c74-55b89145c3c3.png">
-</p>
+DeepLabCut is an open source deep learning computer vision package which uses transfer learning from pre-trained neural networks to optimise the training time of your novel prediction task (https://www.nature.com/articles/s41593-018-0209-y). After manually classifying 100's of frames of videos, the DLC model can now predict animal movements automatically to the exact frame. This allows us to decide when a mouse is licking during a given trial. Important, so that we can remove licking artefacts from the neural ephys inorder to focus on the genuine neural correlates of reward.
 
 ## Ephys
 Python software that inputs kilosorted electrophysiology data, manipulates the data and generates data visulisations such as peristimulus time histograms across 100's of trials and millions of neuronal spikes.
@@ -17,5 +13,3 @@ Python software that inputs kilosorted electrophysiology data, manipulates the d
 <p align="center">
   <img width="980" alt="Screenshot 2020-10-09 at 06 35 35" src="https://user-images.githubusercontent.com/22481774/95548619-61f8c000-09fd-11eb-8582-cffa798ecd25.png">
 </p>
-
-

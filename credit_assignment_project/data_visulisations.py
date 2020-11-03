@@ -5,12 +5,22 @@ from dlc.is_licking import generate_licking_times
 from matplotlib.ticker import MaxNLocator
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+import time
 
-#Set the session Data
+#Performance checks
+start_time = time.time()
+
+#Configure the data
 session_data = '/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat'
+frame_alignment_data = "/Users/laurence/Desktop/Neuroscience/mproject/data/KM011_video_timestamps/2020-03-24/face_timeStamps.mat"
+dlc_video_csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_faceDLC_resnet50_Master_ProjectAug13shuffle1_200000.csv"
 
-#Load licking data
-cherry_df, grape_df, center_df = generate_licking_times()
+#Load the data
+frame_times = import_frame_times(frame_alignment_data)
+cherry_df, grape_df, center_df = generate_licking_times(frame_times, dlc_video_csv)
+# cherry_df = generate_licking_times(frame_times, dlc_video_csv)
+print(grape_df)
 
 #Function for generating a PSTH
 def generate_PSTH(file,cellID):
@@ -156,14 +166,23 @@ def generate_raster(file,cellID):
     for trial in range(len(trial_df)):
         lock_time[trial] = trial_df["reward_times"][trial]
         trial_spikes[trial] = (spike_df["Spike_Times"] - lock_time[trial])
-    print(trial_spikes[0].values)
+    lockspikedf = pd.DataFrame(trial_spikes)
+    data = lockspikedf.transpose().values.tolist()
 
-    # Generate raster
-    plt.eventplot(trial_spikes[0].values,orientation='vertical', linewidths=0.01, linelengths=0.01)
+    #Convert to np array as faster operation speed
+    data = np.array(data)
+
+    #Generate raster - Very slow - can I optimise the code? As the google colab wasnt that slow
+    plt.eventplot(data[0], color=".2")
     plt.xlim(right=3)
     plt.xlim(left=-1)
+    plt.xlabel("Time (s)")
+    plt.yticks([])
     plt.show()
 
 #Generate the visulations
-generate_PSTH(session_data,1)
+# generate_PSTH(session_data,1)
 # generate_raster(session_data,1)
+
+#Print the time of the process
+print("--- %s seconds ---" % (time.time() - start_time))

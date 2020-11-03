@@ -4,7 +4,7 @@
 import pandas as pd
 import numpy as np
 
-test_file = "/Users/laurence/Desktop/Neuroscience/mproject/data/402.csv"
+# test_file = "/Users/laurence/Desktop/Neuroscience/mproject/data/402.csv"
 
 def process_data_spout(file):
     #Read and create df

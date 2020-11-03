@@ -27,6 +27,11 @@ def convert_mat(file):
     df.columns = ["nTrials", "left_choices","free", "left_rewards","right_rewards","violations", "reward_times", "trial_start_times"]
     return(df,spiketimes,cluster_IDs)
 
+def import_frame_times(file):
+    mat_dict = loadmat(file)
+    frametimes = mat_dict["tVid"][0]
+    return(frametimes)
+
 #Test lenghts - Passed lenght tests
 # file = '/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat'
 # df, spiketimes, clusterid = convert_mat(file)
