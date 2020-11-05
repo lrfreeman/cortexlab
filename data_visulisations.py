@@ -1,8 +1,8 @@
-from dlc.process_tongue_data import *
-from dlc.is_licking import *
+from process_tongue_data import *
+from is_licking import *
 from ingest_timesync import *
-from dlc.is_licking import generate_licking_times
 from matplotlib.ticker import MaxNLocator
+from trial_licking import *
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -19,8 +19,8 @@ dlc_video_csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_faceDLC_r
 #Load the data
 frame_times = import_frame_times(frame_alignment_data)
 cherry_df, grape_df, center_df = generate_licking_times(frame_times, dlc_video_csv)
-# cherry_df = generate_licking_times(frame_times, dlc_video_csv)
-print(grape_df)
+TrialLicking(cherry_df, grape_df, center_df, session_data)
+# test()
 
 #Function for generating a PSTH
 def generate_PSTH(file,cellID):
@@ -56,9 +56,9 @@ def generate_PSTH(file,cellID):
     spike_counts, bin_edges = lock_and_count(spike_df["Spike_Times"])
 
     #Return lick counts
-    cherry_lick_counts, x = lock_and_count(cherry_df["time licking"])
-    grape_lick_counts, y = lock_and_count(grape_df["time licking"])
-    center_lick_counts, z = lock_and_count(center_df["time licking"])
+    cherry_lick_counts, x = lock_and_count(cherry_df["Time Licking"])
+    grape_lick_counts, y = lock_and_count(grape_df["Time Licking"])
+    center_lick_counts, z = lock_and_count(center_df["Time Licking"])
 
     #Define reward types
     cherry_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 1) & (trial_df['right_rewards'] == 0)]
@@ -181,7 +181,7 @@ def generate_raster(file,cellID):
     plt.show()
 
 #Generate the visulations
-# generate_PSTH(session_data,1)
+generate_PSTH(session_data,1)
 # generate_raster(session_data,1)
 
 #Print the time of the process

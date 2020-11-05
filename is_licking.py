@@ -1,11 +1,12 @@
 #Run this script with one argument in the command line. That argument should be the csv file output of DLC
 #This script is uses to decide whether the mouse is licking or not, and which spout
+# import credit_assignment_project.dlc
 import matplotlib.pyplot as plt
-from dlc.process_tongue_data import *
+from ingest_timesync import *
+from process_tongue_data import *
 import numpy as np
 import cv2
 import sys
-
 
 #Misc----------------------------------------------------------------------
 # test_file = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_faceDLC_resnet50_Master_ProjectAug13shuffle1_200000.csv"
@@ -14,6 +15,11 @@ import sys
 
 #Extend data print rows
 # pd.set_option("display.max_rows", None, "display.max_columns", None)
+
+#Configure the data
+session_data = '/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat'
+frame_alignment_data = "/Users/laurence/Desktop/Neuroscience/mproject/data/KM011_video_timestamps/2020-03-24/face_timeStamps.mat"
+dlc_video_csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_faceDLC_resnet50_Master_ProjectAug13shuffle1_200000.csv"
 
 def is_licking(csv_path):
     #Change file name to run function
@@ -89,3 +95,6 @@ def generate_licking_times(frametimes,dlc_csv):
 
     #--------------
     return(cherry_licking_df, grape_licking_df, center_licking_df)
+
+trial_df = convert_mat(session_data)
+print(trial_df)
