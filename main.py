@@ -74,7 +74,7 @@ def generate_PSTH(file,cellID):
         return(cherry_lick_counts,grape_lick_counts,center_lick_counts)
 
     #Define trial type
-    cherry_lick_counts, grape_lick_counts, center_lick_counts = lick_count_by_trial_type(both_reward_lick_trials)
+    cherry_lick_counts, grape_lick_counts, center_lick_counts = lick_count_by_trial_type(grape_reward_lick_trials)
 
     #Define reward types
     cherry_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 1) & (trial_df['right_rewards'] == 0)]
@@ -155,7 +155,7 @@ def generate_PSTH(file,cellID):
     ax2.plot(bin_centres, avg_cherry_lick, color='r', label="Lick of cherry spout")
     ax2.plot(bin_centres, avg_grape_lick, color='m', label="Lick of grape spout")
     ax2.plot(bin_centres, avg_center_lick, color='k', label="Lick center of spouts")
-    ax2.set(ylabel="Licking Rate (lick/s)",xlabel="Time from Outcome [s] (Spike Time - Reward Time)")
+    ax2.set(ylabel="Licking Rate (lick/s)",xlabel="Time from Outcome [s] (Spike Time - Reward Time)", title="Grape Reward Trials")
     ax2.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax2.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax2.legend(loc='upper right')

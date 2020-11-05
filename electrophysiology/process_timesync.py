@@ -44,7 +44,3 @@ def process_timesync_data():
     df["Trial ID"] = df["trial_start_times"].apply(trunc)
     df = spike_df.merge(df, on="Trial ID")
     return(df, trial_df, spike_and_cluster_df)
-
-#Tests
-# df, trial_df = process_timesync_data()
-# print(df)

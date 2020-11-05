@@ -10,21 +10,8 @@ import pandas as pd
 import cv2
 import sys
 
-#Misc----------------------------------------------------------------------
-# test_file = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_faceDLC_resnet50_Master_ProjectAug13shuffle1_200000.csv"
-#Code to overlay frmes for CML
-#ffmpeg -i video.mov -vf "drawtext=fontfile=Arial.ttf: text=%{n}: x=(w-tw)/2: y=h-(2*lh): fontcolor=white: box=1: boxcolor=0x00000099" -y output.mov
-
 #Extend data print rows
 # pd.set_option("display.max_rows", None, "display.max_columns", None)
-
-# #Configure the data
-# session_data = '/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat'
-# frame_alignment_data = "/Users/laurence/Desktop/Neuroscience/mproject/data/KM011_video_timestamps/2020-03-24/face_timeStamps.mat"
-# dlc_video_csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_faceDLC_resnet50_Master_ProjectAug13shuffle1_200000.csv"
-#
-# #Load Variables
-# frame_times = import_frame_times(frame_alignment_data)
 
 def is_licking(csv_path):
     #Change file name to run function
@@ -119,8 +106,3 @@ def lick2trial(lick_df,session_data):
     lick_df = lick_df.merge(trial_df, how="left", on="trial_start_times")
     lick_df = lick_df.drop(columns=["nTrials","violations"])
     return(lick_df)
-
-# #Test
-# df = generate_licking_times(frame_times, dlc_video_csv)
-# df = lick2trial(df, session_data)
-# print(df)

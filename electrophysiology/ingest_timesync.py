@@ -1,4 +1,4 @@
-from scipy.io import loadmat  # this is the SciPy module that loads mat-files
+from scipy.io import loadmat
 import pandas as pd
 import numpy as np
 
@@ -27,16 +27,8 @@ def convert_mat(file):
     df.columns = ["nTrials", "left_choices","free", "left_rewards","right_rewards","violations", "reward_times", "trial_start_times"]
     return(df,spiketimes,cluster_IDs)
 
+#Import time of each frame from video taken in rig
 def import_frame_times(file):
     mat_dict = loadmat(file)
     frametimes = mat_dict["tVid"][0]
     return(frametimes)
-
-#Test lenghts - Passed lenght tests
-# file = '/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat'
-# df, spiketimes, clusterid = convert_mat(file)
-# left_reward_trials =  df.loc[(df['left_rewards'] == 1)
-#                          & (df['right_rewards'] == 0)]
-# print(len(left_reward_trials))
-# print("Does spiketime length",len(spiketimes),"equal the length of original matlab file=",3850350)
-# print("Does clusterid length",len(clusterid),"equal the length of original matlab file=",3850350)
