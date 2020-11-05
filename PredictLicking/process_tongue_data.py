@@ -1,6 +1,5 @@
 #This script takes in the CSV output from deep lab cut and processes a data frame with the output required for my project
 #This script will not work out of the box for other projects if the DLC labels change
-
 import pandas as pd
 import numpy as np
 

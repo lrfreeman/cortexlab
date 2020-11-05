@@ -1,8 +1,6 @@
-from process_tongue_data import *
-from is_licking import *
-from ingest_timesync import *
+import PredictLicking.is_licking as lick
+import electrophysiology.ingest_timesync as ingest
 from matplotlib.ticker import MaxNLocator
-from trial_licking import *
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -17,15 +15,14 @@ frame_alignment_data = "/Users/laurence/Desktop/Neuroscience/mproject/data/KM011
 dlc_video_csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_faceDLC_resnet50_Master_ProjectAug13shuffle1_200000.csv"
 
 #Load the data
-frame_times = import_frame_times(frame_alignment_data)
-cherry_df, grape_df, center_df = generate_licking_times(frame_times, dlc_video_csv)
-TrialLicking(cherry_df, grape_df, center_df, session_data)
-# test()
+frame_times = ingest.import_frame_times(frame_alignment_data)
+df = lick.generate_licking_times(frame_times, dlc_video_csv)
+lick_df = lick.lick2trial(df,session_data)
 
 #Function for generating a PSTH
 def generate_PSTH(file,cellID):
     #Create Trial DF
-    trial_df, spike_times, cluster_IDs = convert_mat(file)
+    trial_df, spike_times, cluster_IDs = ingest.convert_mat(file)
     trial_df = trial_df.drop(columns=["nTrials"])
 
     #Create Spike and Cluster ID DF
@@ -55,10 +52,29 @@ def generate_PSTH(file,cellID):
     #Return spike
     spike_counts, bin_edges = lock_and_count(spike_df["Spike_Times"])
 
-    #Return lick counts
-    cherry_lick_counts, x = lock_and_count(cherry_df["Time Licking"])
-    grape_lick_counts, y = lock_and_count(grape_df["Time Licking"])
-    center_lick_counts, z = lock_and_count(center_df["Time Licking"])
+    #Define reward types for licking
+    cherry_reward_lick_trials =  lick_df.loc[(lick_df['left_rewards'] == 1) & (lick_df['right_rewards'] == 0)]
+    grape_reward_lick_trials =  lick_df.loc[(lick_df['left_rewards'] == 0) & (lick_df['right_rewards'] == 1)]
+    both_reward_lick_trials =  lick_df.loc[(lick_df['left_rewards'] == 1) & (lick_df['right_rewards'] == 1)]
+    no_reward_lick_trials =  lick_df.loc[(lick_df['left_rewards'] == 0) & (lick_df['right_rewards'] == 0)]
+
+    def lick_count_by_trial_type(trial_type):
+
+        #Segment by lick type
+        cherrylick = trial_type.loc[(trial_type["Cherry Lick"] == 1)]
+        grapelick = trial_type.loc[(trial_type["Grape Lick"] == 1)]
+        centerlick = trial_type.loc[(trial_type["Center Lick"] == 1)]
+
+        #Return lick counts
+        cherry_lick_counts, x = lock_and_count(cherrylick["Time Licking"])
+        grape_lick_counts, y = lock_and_count(grapelick["Time Licking"])
+        center_lick_counts, z = lock_and_count(centerlick["Time Licking"])
+
+        #-------------------
+        return(cherry_lick_counts,grape_lick_counts,center_lick_counts)
+
+    #Define trial type
+    cherry_lick_counts, grape_lick_counts, center_lick_counts = lick_count_by_trial_type(both_reward_lick_trials)
 
     #Define reward types
     cherry_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 1) & (trial_df['right_rewards'] == 0)]

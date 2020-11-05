@@ -2,9 +2,11 @@
 #This script is uses to decide whether the mouse is licking or not, and which spout
 # import credit_assignment_project.dlc
 import matplotlib.pyplot as plt
-from ingest_timesync import *
-from process_tongue_data import *
+import electrophysiology.ingest_timesync as ingest
+import PredictLicking.process_tongue_data as process
+import PredictLicking.is_licking as lick
 import numpy as np
+import pandas as pd
 import cv2
 import sys
 
@@ -16,15 +18,18 @@ import sys
 #Extend data print rows
 # pd.set_option("display.max_rows", None, "display.max_columns", None)
 
-#Configure the data
-session_data = '/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat'
-frame_alignment_data = "/Users/laurence/Desktop/Neuroscience/mproject/data/KM011_video_timestamps/2020-03-24/face_timeStamps.mat"
-dlc_video_csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_faceDLC_resnet50_Master_ProjectAug13shuffle1_200000.csv"
+# #Configure the data
+# session_data = '/Users/laurence/Desktop/Neuroscience/mproject/Data/aligned_physdata_KM011_2020-03-20_probe0.mat'
+# frame_alignment_data = "/Users/laurence/Desktop/Neuroscience/mproject/data/KM011_video_timestamps/2020-03-24/face_timeStamps.mat"
+# dlc_video_csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_faceDLC_resnet50_Master_ProjectAug13shuffle1_200000.csv"
+#
+# #Load Variables
+# frame_times = import_frame_times(frame_alignment_data)
 
 def is_licking(csv_path):
     #Change file name to run function
-    df = process_data_spout(csv_path)
-    df_len = process_data_spout(csv_path)
+    df = process.process_data_spout(csv_path)
+    df_len = process.process_data_spout(csv_path)
     #Filter for any two features predicted at 99%--------------------------
     df = df.loc[(df['C_T_L'] >= 0.99) & (df['F_E_L'] >= 0.99)
                |(df['C_T_L'] >= 0.99) & (df['RE_T_L'] >= 0.99)
@@ -37,7 +42,7 @@ def is_licking(csv_path):
 
 def is_licking_spout(df, csv):
     #Create a dataframe with frames where mouse is licking
-    df, frame_is_licking, df_len = is_licking(csv)
+    df, frame_is_licking, df_len = lick.is_licking(csv)
 
     #Find the middle X coord between cherry and grape spouts
     avg_LRight_GS_X = df["LR_GS_X"].mean()
@@ -66,8 +71,8 @@ def is_licking_spout(df, csv):
     return(frames_licking_cherry,frames_licking_grape,centre_lick)
 
 def generate_licking_times(frametimes,dlc_csv):
-    df, frame_is_licking, df_len = is_licking(dlc_csv)
-    cherry_frames, grape_frames, center_frames = is_licking_spout(df, dlc_csv)
+    df, frame_is_licking, df_len = lick.is_licking(dlc_csv)
+    cherry_frames, grape_frames, center_frames = lick.is_licking_spout(df, dlc_csv)
 
     #Create three dfs for reward licking
     cherry_licking_df = pd.DataFrame(cherry_frames, columns = ["frames licking"])
@@ -93,8 +98,29 @@ def generate_licking_times(frametimes,dlc_csv):
                                                 right_index=True)
     center_licking_df.columns = ["Frames Licking", "Time Licking"]
 
+    #Add type before merge of all three
+    cherry_licking_df["Cherry Lick"] = 1
+    grape_licking_df["Grape Lick"] = 1
+    center_licking_df["Center Lick"] = 1
+    df = pd.concat([cherry_licking_df, grape_licking_df,center_licking_df], axis = 0, ignore_index=True)
+    df = df.fillna(value=0)
+    df.sort_values(by="Frames Licking", ignore_index=True)
     #--------------
-    return(cherry_licking_df, grape_licking_df, center_licking_df)
+    return(df)
 
-trial_df = convert_mat(session_data)
-print(trial_df)
+def lick2trial(lick_df,session_data):
+    trial_df, spike_times, cluster_IDs = ingest.convert_mat(session_data)
+    bins = trial_df["trial_start_times"]
+    trial_df["trial_start_times"] = trial_df["trial_start_times"].apply(lambda x :int(x))
+    lick_df["trial_start_times"] = pd.cut(lick_df["Time Licking"], bins=bins)
+    lick_df["trial_start_times"] = lick_df["trial_start_times"].apply(lambda x: x.left)
+    lick_df = lick_df.dropna()
+    lick_df["trial_start_times"] = lick_df["trial_start_times"].apply(lambda x: int(x))
+    lick_df = lick_df.merge(trial_df, how="left", on="trial_start_times")
+    lick_df = lick_df.drop(columns=["nTrials","violations"])
+    return(lick_df)
+
+# #Test
+# df = generate_licking_times(frame_times, dlc_video_csv)
+# df = lick2trial(df, session_data)
+# print(df)
