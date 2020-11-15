@@ -8,7 +8,7 @@ import PredictLicking.is_licking as lick
 # video = "/Users/laurence/Desktop/Trial_data_DLC/video_snippet_KM011_2020-03-19_trial102.avi"
 
 #Test snippet of 24th session - video_snippet
-csv = "/Users/laurence/Desktop/Trial_data_DLC/vlc-record-2020-11-12-09h31m13s-24_face(1.16).mp4-DLC_resnet50_Master_ProjectAug13shuffle1_200000.csv"
+csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_3minsDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv"
 video = "/Users/laurence/Desktop/file.avi"
 
 #Calculate the frames the mouse is licking
