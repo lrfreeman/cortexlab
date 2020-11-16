@@ -5,6 +5,10 @@ cd deeplabcut
 ipython
 import DeepLabCut
 
+use sudo nano /etc/ssh/sshd_config
+to change ClientAliveInterval 300
+so don't get broekn pipe
+
 #Set config to variable for reuse
 config_path = '/home/ubuntu/DeepLabCut/Master_Project-L-2020-08-13/config.yaml'
 

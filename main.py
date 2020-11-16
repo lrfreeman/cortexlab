@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import time
 
+#Extend data print rows
+# pd.set_option("display.max_rows", None, "display.max_columns", None)
+
 #Performance checks
 start_time = time.time()
 
@@ -34,9 +37,6 @@ def generate_PSTH(file,cellID):
     bins = np.arange(-1,3,0.2).tolist()
     bins = [ round(elem, 2) for elem in bins ]
 
-    #Extend data print rows
-    # pd.set_option("display.max_rows", None, "display.max_columns", None)
-
     #####Choose a cell#######
     spike_df = spike_df.loc[(spike_df["cluster_ids"] == cellID)]
 
@@ -50,8 +50,10 @@ def generate_PSTH(file,cellID):
             x_counts[trial] = counts
         return(x_counts, bin_edges)
 
-    #Return spike
+    #Return spike counts and bin edges
     spike_counts, bin_edges = lock_and_count(spike_df["Spike_Times"])
+    #Cal bin cbincentres
+    bin_centres = 0.5*(bin_edges[1:]+bin_edges[:-1])
 
     #Define reward types for licking
     cherry_reward_lick_trials =  lick_df.loc[(lick_df['left_rewards'] == 1) & (lick_df['right_rewards'] == 0)]
@@ -59,6 +61,13 @@ def generate_PSTH(file,cellID):
     both_reward_lick_trials =  lick_df.loc[(lick_df['left_rewards'] == 1) & (lick_df['right_rewards'] == 1)]
     no_reward_lick_trials =  lick_df.loc[(lick_df['left_rewards'] == 0) & (lick_df['right_rewards'] == 0)]
 
+    #Define reward types
+    cherry_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 1) & (trial_df['right_rewards'] == 0)]
+    grape_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 0) & (trial_df['right_rewards'] == 1)]
+    both_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 1) & (trial_df['right_rewards'] == 1)]
+    no_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 0) & (trial_df['right_rewards'] == 0)]
+
+    #Function to see licking by trial type
     def lick_count_by_trial_type(trial_type):
 
         #Segment by lick type
@@ -76,12 +85,6 @@ def generate_PSTH(file,cellID):
 
     #Define trial type
     cherry_lick_counts, grape_lick_counts, center_lick_counts = lick_count_by_trial_type(cherry_reward_lick_trials)
-
-    #Define reward types
-    cherry_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 1) & (trial_df['right_rewards'] == 0)]
-    grape_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 0) & (trial_df['right_rewards'] == 1)]
-    both_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 1) & (trial_df['right_rewards'] == 1)]
-    no_reward_trials =  trial_df.loc[(trial_df['left_rewards'] == 0) & (trial_df['right_rewards'] == 0)]
 
     # Seperate counts per trial type
     cherry_spike_counts = [spike_counts[x] for x in range(len(trial_df)) if list(spike_counts.keys())[x] in cherry_reward_trials.index.values]
@@ -105,9 +108,6 @@ def generate_PSTH(file,cellID):
     num_g_trials = len(grape_spike_counts)
     num_bothreward_trials = len(bothreward_spike_counts)
     num_noreward_trials = len(noreward_spike_counts)
-
-    #Cal bin cbincentres
-    bin_centres = 0.5*(bin_edges[1:]+bin_edges[:-1])
 
     #Calculate average firing rate of a neuron per second
     cherry_hertz = (cherry_count / num_c_trials) * 5
