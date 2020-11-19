@@ -20,13 +20,19 @@ def is_licking(csv_path):
     # df_len = process.process_data_spout(csv_path)
     df = df.astype(float)
 
+    # print(df.iloc[282])
+
     # Filter for any two features predicted at 99%--------------------------
-    df = df.loc[(df['C_T_L'] >= 0.99) & (df['F_E_L'] >= 0.99)
-               |(df['C_T_L'] >= 0.99) & (df['RE_T_L'] >= 0.99)
-               |(df['C_T_L'] >= 0.99) & (df['LE_T_L'] >= 0.99)
-               |(df['LE_T_L'] >= 0.99) & (df['RE_T_L'] >= 0.99)
-               |(df['LE_T_L'] >= 0.99) & (df['F_E_L'] >= 0.99)
-               |(df['RE_T_L'] >= 0.99) & (df['F_E_L'] >= 0.99)]
+    # df = df.loc[(df['C_T_L'] >= 0.99) & (df['F_E_L'] >= 0.99)
+    #            |(df['C_T_L'] >= 0.99) & (df['RE_T_L'] >= 0.99)
+    #            |(df['C_T_L'] >= 0.99) & (df['LE_T_L'] >= 0.99)
+    #            |(df['LE_T_L'] >= 0.99) & (df['RE_T_L'] >= 0.99)
+    #            |(df['LE_T_L'] >= 0.99) & (df['F_E_L'] >= 0.99)
+    #            |(df['RE_T_L'] >= 0.99) & (df['F_E_L'] >= 0.99)]
+    df = df.loc[(df['C_T_L'] >= 0.99)
+               &(df['RE_T_L'] >= 0.99)
+               &(df['LE_T_L'] >= 0.99)]
+
     frame_is_licking = df.index.values
     frame_is_licking = np.array([int(x) for x in frame_is_licking])
 
@@ -45,30 +51,17 @@ def is_licking_spout(df, csv):
     Center_X = (avg_RLeft_CS_X - avg_LRight_GS_X) / 2
     Center_X = Center_X + avg_LRight_GS_X
 
-    # #Is licking left / grape spout
-    # is_licking_grape =  df.loc[(df['RE_T_X'] < df["LR_GS_X"])
-    #                           |(df['C_T_X']  < df["LR_GS_X"])
-    #                           &(df['LE_T_X'] < df["LR_GS_X"])
-    #                           |(df['LE_T_X'] < df["LC_GS_X"])
-    #                           |(df['LE_T_X'] < df["LR_GS_X"])
-    #                           |(df['RE_T_X'] < Center_X)]
-    #
-    # #Is licking right / cherry spout
-    # is_licking_cherry = df.loc[(df['LE_T_X'] > df["RL_CS_X"])
-    #                           |(df['C_T_X']  > df["RL_CS_X"])
-    #                           &(df['RE_T_X'] > df["RL_CS_X"])
-    #                           |(df['RE_T_X'] > df["RC_CS_X"])
-    #                           |(df['RE_T_X'] > df["RL_CS_X"])
-    #                           |(df['LE_T_X'] > Center_X)]
-
     #Is licking left / grape spout
-    is_licking_grape =  df.loc[(df['LE_T_X'] < Center_X)
-                              &(df['C_T_X']  <  Center_X)]
+    is_licking_grape =  df.loc[(df['RE_T_X'] < df["LR_GS_X"])
+                              |(df['C_T_X']  < df["LC_GS_X"])
+                              |(df['LE_T_X'] < df["LC_GS_X"])
+                              |(df['RE_T_X'] < Center_X)]
 
     #Is licking right / cherry spout
-    is_licking_cherry = df.loc[(df['RE_T_X'] > Center_X)
-                              &(df['C_T_X']  >  Center_X)]
-
+    is_licking_cherry = df.loc[(df['LE_T_X'] > df["RL_CS_X"])
+                              |(df['C_T_X']  > df["RC_CS_X"])
+                              |(df['RE_T_X'] > df["RC_CS_X"])
+                              |(df['LE_T_X'] > Center_X)]
 
     #Convert data frame into values array
     frames_licking_cherry = is_licking_cherry.index.values

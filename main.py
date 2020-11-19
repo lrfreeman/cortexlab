@@ -64,23 +64,9 @@ def lock_and_count(time,bins,trial_df):
         x_counts[trial] = counts
     return(x_counts, bin_edges)
 
-# #Function to see licking by trial type
-# def lick_count_by_trial_type(trial_type):
-#
-#     #Segment by lick type
-#     cherrylick = trial_type.loc[(trial_type["Cherry Lick"] == 1)]
-#     print("Number of cherry licks for this trial type", len(cherrylick.values))
-#     grapelick = trial_type.loc[(trial_type["Grape Lick"] == 1)]
-#     print("Number of grape licks for this trial type", len(grapelick.values))
-#     centerlick = trial_type.loc[(trial_type["Center Lick"] == 1)]
-#
-#     #Return lick counts
-#     cherry_lick_counts, x = lock_and_count(cherrylick["Time Licking"],bins,trial_df)
-#     grape_lick_counts, y = lock_and_count(grapelick["Time Licking"],bins,trial_df)
-#     center_lick_counts, z = lock_and_count(centerlick["Time Licking"],bins,trial_df)
-#
-#     #-------------------
-#     return(cherry_lick_counts,grape_lick_counts,center_lick_counts)
+def count_to_trial(trial_type, data_counts):
+    count = [data_counts[x] for x in range(len(trial_df)) if list(data_counts.keys())[x] in trial_type.index.values]
+    return(count)
 
 #Function for generating a PSTH
 def generate_PSTH(trial_df,spike_df,cellID):
@@ -107,6 +93,10 @@ def generate_PSTH(trial_df,spike_df,cellID):
     #Define trial type
     # cherry_lick_counts, grape_lick_counts, center_lick_counts = lick_count_by_trial_type(trial_type)
 
+    def count_to_trial(trial_type, data_counts):
+        count = [data_counts[x] for x in range(len(trial_df)) if list(data_counts.keys())[x] in trial_type.index.values]
+        return(count)
+
     # Seperate counts per trial type
     cherry_spike_counts = [spike_counts[x] for x in range(len(trial_df)) if list(spike_counts.keys())[x] in cherry_reward_trials.index.values]
     grape_spike_counts = [spike_counts[x] for x in range(len(trial_df)) if list(spike_counts.keys())[x] in grape_reward_trials.index.values]
@@ -114,18 +104,26 @@ def generate_PSTH(trial_df,spike_df,cellID):
     noreward_spike_counts = [spike_counts[x] for x in range(len(trial_df)) if list(spike_counts.keys())[x] in no_reward_trials.index.values]
 
     #Trial type licks - new test
-    cherry_trial_cherry_licks = [new_cherry_lick_counts[x] for x in range(len(trial_df)) if list(new_cherry_lick_counts.keys())[x] in cherry_reward_trials.index.values]
-    cherry_trial_grape_licks = [new_grape_lick_counts[x] for x in range(len(trial_df)) if list(new_grape_lick_counts.keys())[x] in cherry_reward_trials.index.values]
-    grape_trial_cherry_licks = [new_cherry_lick_counts[x] for x in range(len(trial_df)) if list(new_cherry_lick_counts.keys())[x] in grape_reward_trials.index.values]
-    grape_trial_grape_licks = [new_grape_lick_counts[x] for x in range(len(trial_df)) if list(new_grape_lick_counts.keys())[x] in grape_reward_trials.index.values]
+    cherry_trial_cherry_licks = count_to_trial(cherry_reward_trials, new_cherry_lick_counts)
+    cherry_trial_grape_licks = count_to_trial(cherry_reward_trials, new_grape_lick_counts)
+    grape_trial_cherry_licks = count_to_trial(grape_reward_trials, new_cherry_lick_counts)
+    grape_trial_grape_licks = count_to_trial(grape_reward_trials, new_grape_lick_counts)
+    both_reward_trial_cherry_licks = count_to_trial(both_reward_trials, new_cherry_lick_counts)
+    both_reward_trial_grape_licks = count_to_trial(both_reward_trials, new_grape_lick_counts)
+    no_reward_trial_cherry_licks = count_to_trial(no_reward_trials, new_cherry_lick_counts)
+    no_reward_trial_grape_licks = count_to_trial(no_reward_trials, new_grape_lick_counts)
 
     #Calculate licks for each trial type and reward
     cherry_trial_cherry_licks_count = pd.DataFrame(cherry_trial_cherry_licks).sum(axis=0)
     cherry_trial_grape_licks_count = pd.DataFrame(cherry_trial_grape_licks).sum(axis=0)
     grape_trial_cherry_licks_count = pd.DataFrame(grape_trial_cherry_licks).sum(axis=0)
     grape_trial_grape_licks_count = pd.DataFrame(grape_trial_grape_licks).sum(axis=0)
+    both_reward_trial_cherry_licks = pd.DataFrame(both_reward_trial_cherry_licks).sum(axis=0)
+    both_reward_trial_grape_licks = pd.DataFrame(both_reward_trial_grape_licks).sum(axis=0)
+    no_reward_trial_cherry_licks = pd.DataFrame(no_reward_trial_cherry_licks).sum(axis=0)
+    no_reward_trial_grape_licks = pd.DataFrame(no_reward_trial_grape_licks).sum(axis=0)
 
-    #Calculate counts per trial type for each bin
+    #Calculate spike counts per trial type for each bin
     cherry_count = pd.DataFrame(cherry_spike_counts).sum(axis=0)
     grape_count = pd.DataFrame(grape_spike_counts).sum(axis=0)
     both_reward_count = pd.DataFrame(bothreward_spike_counts).sum(axis=0)
@@ -156,11 +154,15 @@ def generate_PSTH(trial_df,spike_df,cellID):
     normalised_cherry_trial_grape_licks  = cherry_trial_grape_licks_count   / len(cherry_reward_lick_trials.values) * 100
     normalised_grape_trial_cherry_licks  = grape_trial_cherry_licks_count   / len(grape_reward_lick_trials.values) * 100
     normalised_grape_trial_grape_licks   = grape_trial_grape_licks_count    / len(grape_reward_lick_trials.values) * 100
+    normalised_both_reward_trial_cherry_licks = both_reward_trial_cherry_licks / len(both_reward_lick_trials.values) * 100
+    normalised_both_reward_trial_grape_licks = both_reward_trial_grape_licks / len(both_reward_lick_trials.values) * 100
+    normalised_no_reward_trial_cherry_licks = no_reward_trial_cherry_licks / len(no_reward_lick_trials.values) * 100
+    normalised_no_reward_trial_grape_licks = no_reward_trial_grape_licks / len(no_reward_lick_trials.values) * 100
 
     #--------------------------------------------------------------------------
 
     #Plot subplots
-    fig, (ax1, ax2, ax3) = plt.subplots(3, sharex=True)
+    fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, sharex=True)
     ax1.plot(bin_centres,cherry_hertz, color='r', label="Cherry Reward")
     ax1.plot(bin_centres,grape_hertz, color='m', label="Grape Reward")
     ax1.plot(bin_centres,noreward_hertz, color='k', label="No Reward")
@@ -172,7 +174,7 @@ def generate_PSTH(trial_df,spike_df,cellID):
     ax2.plot(bin_centres, normalised_cherry_trial_cherry_licks, color='r', label="Lick of cherry spout")
     ax2.plot(bin_centres, normalised_cherry_trial_grape_licks, color='m', label="Lick of grape spout")
     # ax2.plot(bin_centres, avg_center_lick, color='k', label="Lick center of spouts")
-    ax2.set(ylabel="Percentage of frames licking",xlabel="Time from Outcome [s] (Spike Time - Reward Time)", title="Cherry Reward Trials")
+    ax2.set(ylabel="Percentage of frames licking", title="Cherry Reward Trials")
     ax2.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax2.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax2.legend(loc='upper right')
@@ -181,67 +183,86 @@ def generate_PSTH(trial_df,spike_df,cellID):
     ax3.plot(bin_centres, normalised_grape_trial_cherry_licks, color='r', label="Lick of cherry spout")
     ax3.plot(bin_centres, normalised_grape_trial_grape_licks, color='m', label="Lick of grape spout")
     # ax2.plot(bin_centres, avg_center_lick, color='k', label="Lick center of spouts")
-    ax3.set(ylabel="Percentage of frames licking",xlabel="Time from Outcome [s] (Spike Time - Reward Time)", title="Grape Reward Trials")
+    ax3.set(ylabel="Percentage of frames licking", title="Grape Reward Trials")
     ax3.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax3.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax3.legend(loc='upper right')
+
+    #Licking subplot
+    ax4.plot(bin_centres, normalised_both_reward_trial_cherry_licks, color='r', label="Lick of cherry spout")
+    ax4.plot(bin_centres, normalised_both_reward_trial_grape_licks, color='m', label="Lick of grape spout")
+    # ax2.plot(bin_centres, avg_center_lick, color='k', label="Lick center of spouts")
+    ax4.set(ylabel="Percentage of frames licking", title="Both Reward Trials")
+    ax4.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax4.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax4.legend(loc='upper right')
+
+    #Licking subplot
+    ax5.plot(bin_centres, normalised_no_reward_trial_cherry_licks, color='r', label="Lick of cherry spout")
+    ax5.plot(bin_centres, normalised_no_reward_trial_grape_licks, color='m', label="Lick of grape spout")
+    # ax2.plot(bin_centres, avg_center_lick, color='k', label="Lick center of spouts")
+    ax5.set(ylabel="Percentage of frames licking",xlabel="Time from Outcome [s] (Spike Time - Reward Time)", title="No Reward Trials")
+    ax5.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax5.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax5.legend(loc='upper right')
 
     #Show plot
     plt.show()
 
 #Function to generate Spike Raster
 def generate_raster(file,cellID):
-    #Create Trial DF
-    trial_df, spike_times, cluster_IDs = convert_mat(file)
-    trial_df = trial_df.drop(columns=["nTrials"])
-
-    #Create Spike and Cluster ID DF
-    spike_df =  pd.DataFrame(spike_times, columns = ["Spike_Times"])
-    spike_df["cluster_ids"] = cluster_IDs
+    #Load data
+    trial_df, spike_df = load_data_for_PSTH(session_data)
 
     #####Choose a cell#######
     spike_df = spike_df.loc[(spike_df["cluster_ids"] == cellID)]
 
-    #Generate lock times
-    lock_time = {}
-    trial_spikes = {}
-    for trial in range(len(trial_df)):
-        lock_time[trial] = trial_df["reward_times"][trial]
-        trial_spikes[trial] = (spike_df["Spike_Times"] - lock_time[trial])
-    lockspikedf = pd.DataFrame(trial_spikes)
-    data = lockspikedf.transpose().values.tolist()
+    #Return spike counts and bin edges for a set of bins for a given trial data frame
+    spike_counts, bin_edges = lock_and_count(spike_df["Spike_Times"],bins,trial_df)
 
-    #Convert to np array as faster operation speed
-    data = np.array(data)
+    # Seperate counts per trial type
+    cherry_spike_counts = count_to_trial(cherry_reward_trials, spike_counts)
+    grape_spike_counts = count_to_trial(grape_reward_trials, spike_counts)
+    both_reward_spike_counts = count_to_trial(both_reward_trials, spike_counts)
+    no_reward_spike_counts = count_to_trial(no_reward_trials, spike_counts)
+
+    cherry_spike_counts = np.array(cherry_spike_counts)
+    print(cherry_spike_counts.shape)
+
+    # data = df.transpose().values.tolist()
+
+    # #Convert to np array as faster operation speed
+    # data = np.array(data)
 
     #Generate raster - Very slow - can I optimise the code? As the google colab wasnt that slow
-    plt.eventplot(data[0], color=".2")
+    plt.eventplot(cherry_spike_counts, color=".2")
     plt.xlim(right=3)
     plt.xlim(left=-1)
     plt.xlabel("Time (s)")
     plt.yticks([])
-    # plt.show()
+    plt.show()
 
 #Generate the visulations
-generate_PSTH(trial_df,spike_df,1)
+# generate_PSTH(trial_df,spike_df,1)
+generate_raster(session_data,1)
 
 #----------------------------------------------------------
 
-#Tests
-print("")
-print("#############")
-print("````````````")
-print("Length of cherry data frame out of generate lick times", len(df[df["Cherry Lick"] == 1].values))
-print("Length of grape data frame out of generate lick times", len(df[df["Grape Lick"] == 1].values))
-print("````````````")
-print("Length of cherry data frame out of mapped lick times", len(lick_df[lick_df["Cherry Lick"] == 1].values))
-print("Length of grape data frame out of mapped lick times", len(lick_df[lick_df["Grape Lick"] == 1].values))
-print("````````````")
-print("len of cherry trials", len(cherry_reward_trials))
-print("len of grape trials", len(grape_reward_trials))
-print("````````````")
-print("#############")
-print("")
+# #Tests
+# print("")
+# print("#############")
+# print("````````````")
+# print("Length of cherry data frame out of generate lick times", len(df[df["Cherry Lick"] == 1].values))
+# print("Length of grape data frame out of generate lick times", len(df[df["Grape Lick"] == 1].values))
+# print("````````````")
+# print("Length of cherry data frame out of mapped lick times", len(lick_df[lick_df["Cherry Lick"] == 1].values))
+# print("Length of grape data frame out of mapped lick times", len(lick_df[lick_df["Grape Lick"] == 1].values))
+# print("````````````")
+# print("len of cherry trials", len(cherry_reward_trials))
+# print("len of grape trials",  len(grape_reward_trials))
+# print("````````````")
+# print("#############")
+# print("")
 
 
 #Print the time of the process

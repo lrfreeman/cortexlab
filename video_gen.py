@@ -3,24 +3,22 @@ import cv2
 import matplotlib.pyplot as plt
 import PredictLicking.is_licking as lick
 
-# #New trial data 100,101,102
-# csv = "/Users/laurence/Desktop/Trial_data_DLC/video_snippet_KM011_2020-03-19_trial102DLC_resnet50_Master_ProjectAug13shuffle1_200000.csv"
-# video = "/Users/laurence/Desktop/Trial_data_DLC/video_snippet_KM011_2020-03-19_trial102.avi"
-
 #Test snippet of 24th session - video_snippet
-csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_3minsDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv"
-video = "/Users/laurence/Desktop/file.avi"
+dlc_video_csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv"
+video = "/Users/laurence/Desktop/24_face.avi"
 
 #Calculate the frames the mouse is licking
-df, array_of_licks = lick.is_licking(csv)
-cherry_frames, grape_frames, centre_frames = lick.is_licking_spout(df, csv)
+df, array_of_licks = lick.is_licking(dlc_video_csv)
+cherry_frames, grape_frames, centre_frames = lick.is_licking_spout(df, dlc_video_csv)
 
 print("###########################")
 print("TRIAL snip of 24th")
 print("")
 print("Frames Licking Cherry", cherry_frames)
+print("total cherry licking frames", len(cherry_frames))
 print("")
 print("Frames Licking Grape", grape_frames)
+print("total grape licking frames", len(grape_frames))
 print("")
 print("Frames Licking Centre", centre_frames)
 print("")
@@ -83,7 +81,7 @@ while(cap.isOpened()):
     cv2.imshow("video",colour)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-#
-# cap.release()
-# out.release()
-# cv2.destroyAllWindows()
+
+cap.release()
+out.release()
+cv2.destroyAllWindows()
