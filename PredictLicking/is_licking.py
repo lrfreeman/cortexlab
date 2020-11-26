@@ -148,3 +148,25 @@ def map_lick_to_trial_type(lick_df,session_data):
 
     #Output a data frame with an array of licks and what trial type that lick occured in
     return(lick_df)
+
+def compute_1st_lick(lick_df):
+    #Potential bug as the number of first licks don't match total trial len
+    data_frame = lick_df.sort_values(by="Time Licking", ignore_index=True)
+    post_reward_lick_dict = {}
+    first_lick = {}
+    for row in range(len(data_frame)):
+        if data_frame["Time Licking"][row] < data_frame["reward_times"][row]:
+            data_frame = data_frame.drop(row, axis=0)
+
+    for trial in data_frame["Trial_ID"]:
+        indexx = data_frame[data_frame["Trial_ID"] == trial].index.values
+        indexx = indexx[0]
+        if data_frame["Time Licking"][indexx] >= data_frame["reward_times"][indexx]:
+            first_lick[trial] = data_frame["Time Licking"][indexx]
+    first_lick_df = pd.DataFrame()
+    first_lick_df["Trial IDs"] = list(first_lick.keys())
+    first_lick_df["First Lick Times"] = list(first_lick.values())
+
+    print("Length of first lick data frame, should match trial len:", len(first_lick))
+    print(first_lick_df)
+    return(first_lick_df)
