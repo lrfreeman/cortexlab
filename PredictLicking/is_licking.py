@@ -38,7 +38,7 @@ def is_licking(csv_path):
 
     #Print how many frames the mouse is licking
     # print("The total frames the mouse is licking",len(df.values))
-    print("The total frames the mouse is licking",len(frame_is_licking))
+    # print("The total frames the mouse is licking",len(frame_is_licking))
     return(df,frame_is_licking)
 
 def is_licking_spout(df, csv):
@@ -79,13 +79,13 @@ def generate_licking_times(frametimes,dlc_csv):
     df, frame_is_licking = lick.is_licking(dlc_csv)
     cherry_frames, grape_frames, center_frames = lick.is_licking_spout(df, dlc_csv)
 
-    print("")
-    print("#############################################")
-    print("Number of frames the mouse is licking cherry",      len(cherry_frames))
-    print("Number of frames the mouse is licking grape",       len(grape_frames))
-    print("Number of frames the mouse is licking the center",  len(center_frames))
-    print("#############################################")
-    print("")
+    # print("")
+    # print("#############################################")
+    # print("Number of frames the mouse is licking cherry",      len(cherry_frames))
+    # print("Number of frames the mouse is licking grape",       len(grape_frames))
+    # print("Number of frames the mouse is licking the center",  len(center_frames))
+    # print("#############################################")
+    # print("")
 
     #Create three dfs for reward licking
     cherry_licking_df = pd.DataFrame(cherry_frames, columns = ["frames licking"])
@@ -126,7 +126,7 @@ def map_lick_to_trial_type(lick_df,session_data):
 
     # print(lick_df._is_view)
     #Use the convert_mat function to get trial_df
-    trial_df, spike_times, cluster_IDs = ingest.convert_mat(session_data)
+    trial_df, spike_times, cluster_IDs, cluster_types = ingest.convert_mat(session_data)
 
     #Assign a trial start time to each lick
     lick_df["trial_start_times"] = pd.cut(lick_df["Time Licking"], trial_df["trial_start_times"])
@@ -167,6 +167,6 @@ def compute_1st_lick(lick_df):
     first_lick_df["Trial IDs"] = list(first_lick.keys())
     first_lick_df["First Lick Times"] = list(first_lick.values())
 
-    print("Length of first lick data frame, should match trial len:", len(first_lick))
-    print(first_lick_df)
+    # print("Length of first lick data frame, should match trial len:", len(first_lick))
+    # print(first_lick_df)
     return(first_lick_df)
