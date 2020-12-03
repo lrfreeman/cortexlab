@@ -19,5 +19,5 @@ The below chart shows 5 subplots. The first is the PSTH associated with a single
 The below chart is a spike raster visulisation produced in python with each trial type coloured differently.
 
 <p align="center">
-![spike_raster](https://user-images.githubusercontent.com/22481774/101002818-0445a780-3558-11eb-9fa7-6eea890db888.png)
+  <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/101002818-0445a780-3558-11eb-9fa7-6eea890db888.png">
 </p>
