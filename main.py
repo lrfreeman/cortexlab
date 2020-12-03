@@ -263,7 +263,7 @@ def generate_PSTH(trial_df,spike_df,cellID):
     ax5.set_ylim([0, 18])
 
     #Show plot
-    # plt.show()
+    plt.show()
     return(fig)
 
 #Function to generate Spike Raster
@@ -322,7 +322,8 @@ def generate_raster(session_data,cellID):
     plt.show()
 
 # #Generate the visulations
-generate_raster(session_data, 1)
+generate_PSTH(trial_df,spike_df,1)
+# generate_raster(session_data, 1)
 
 # generate_PSTH(trial_df,spike_df,1)
 # pdf = matplotlib.backends.backend_pdf.PdfPages("output.pdf")
