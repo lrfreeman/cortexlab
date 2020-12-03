@@ -23,6 +23,9 @@ session_data = '/Users/laurence/Desktop/Neuroscience/mproject/data/processed_phy
 frame_alignment_data = "/Users/laurence/Desktop/Neuroscience/mproject/data/KM011_video_timestamps/2020-03-23/face_timeStamps.mat"
 dlc_video_csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/23_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv"
 
+# #Configure the data - 20th Session
+# session_data = '/Users/laurence/Desktop/Neuroscience/mproject/data/processed_physdata/aligned_physdata_KM011_2020-03-20_probe0.mat'
+
 #Create bins that are 200ms
 bins = np.arange(-1,3,0.2).tolist()
 bins = [ round(elem, 2) for elem in bins ]
@@ -50,10 +53,9 @@ def load_data_for_PSTH(session_data):
     return(trial_df,spike_df, num_of_cluster_types)
 trial_df, spike_df, num_of_cluster_types = load_data_for_PSTH(session_data)
 
-print("")
-print("Number of cluster types:", num_of_cluster_types)
-print("")
-
+# print("")
+# print("Number of cluster types:", num_of_cluster_types)
+# print("")
 
 #A function to split lick data or spike data by trial type
 def split_data_by_trial_type(data_frame):
@@ -265,45 +267,69 @@ def generate_PSTH(trial_df,spike_df,cellID):
     return(fig)
 
 #Function to generate Spike Raster
-def generate_raster(file,cellID):
+def generate_raster(session_data,cellID):
+
     #Load data
-    trial_df, spike_df = load_data_for_PSTH(session_data)
+    trial_df, spike_df, num_of_cluster_types = load_data_for_PSTH(session_data)
 
     #####Choose a cell#######
     spike_df = spike_df.loc[(spike_df["cluster_ids"] == cellID)]
 
-    #Return spike counts and bin edges for a set of bins for a given trial data frame
-    spike_counts, bin_edges = lock_and_count(spike_df["Spike_Times"],bins,trial_df)
+    #Returns a dictionary with key trial number and value locked spike times
+    def lock_and_sort_for_raster(time,trial_df):
+        lock_time = {}
+        trial_spike_times = {}
+        for trial in range(len(trial_df)):
+            lock_time[trial] = trial_df["reward_times"][trial]
+            trial_spike_times[trial] = time-lock_time[trial]
+        return(trial_spike_times)
+    trial_spike_times = lock_and_sort_for_raster(spike_df["Spike_Times"],trial_df)
 
-    # Seperate counts per trial type
-    cherry_spike_counts = count_to_trial(cherry_reward_trials, spike_counts)
-    grape_spike_counts = count_to_trial(grape_reward_trials, spike_counts)
-    both_reward_spike_counts = count_to_trial(both_reward_trials, spike_counts)
-    no_reward_spike_counts = count_to_trial(no_reward_trials, spike_counts)
+    # Seperate spikes per trial type
+    cherrySpikeValues = [trial_spike_times[x] for x in range(len(trial_df)) if list(trial_spike_times.keys())[x] in cherry_reward_trials.index.values]
+    grapeSpikeValues = [trial_spike_times[x] for x in range(len(trial_df)) if list(trial_spike_times.keys())[x] in grape_reward_trials.index.values]
+    bothRewardSpikeValues = [trial_spike_times[x] for x in range(len(trial_df)) if list(trial_spike_times.keys())[x] in both_reward_trials.index.values]
+    noRewardSpikeValues = [trial_spike_times[x] for x in range(len(trial_df)) if list(trial_spike_times.keys())[x] in no_reward_trials.index.values]
 
-    cherry_spike_counts = np.array(cherry_spike_counts)
-    print(cherry_spike_counts.shape)
+    #convert to np array
+    cherrySpikeValues = np.asarray(cherrySpikeValues)
+    grapeSpikeValues = np.asarray(grapeSpikeValues)
+    bothRewardSpikeValues = np.asarray(bothRewardSpikeValues)
+    noRewardSpikeValues = np.asarray(noRewardSpikeValues)
 
-    # data = df.transpose().values.tolist()
+    #Concaternate arrays
+    spikes = np.concatenate((cherrySpikeValues,grapeSpikeValues,bothRewardSpikeValues,noRewardSpikeValues))
 
-    # #Convert to np array as faster operation speed
-    # data = np.array(data)
+    #SO that we can create a correspondding colour length for event plot
+    lenOfCherryTrials = len(cherry_reward_trials)
+    lenOfGrapeTrials = len(grape_reward_trials)
+    lenOfBothRewardTrials = len(both_reward_trials)
+    lenOfNoRewardTrials = len(no_reward_trials)
 
-    #Generate raster - Very slow - can I optimise the code? As the google colab wasnt that slow
-    plt.eventplot(cherry_spike_counts, color=".2")
+    #Create colorCodes
+    colorCodesCherry = [[1,0,0]] * lenOfCherryTrials
+    colorCodesGrape = [[1,0,1]] * lenOfGrapeTrials
+    colorCodesBothReward = [[0,0,1]] * lenOfBothRewardTrials
+    colorCodesNoReward = [[0,0,0]] * lenOfNoRewardTrials
+    colorCodes = colorCodesCherry + colorCodesGrape + colorCodesBothReward + colorCodesNoReward
+
+    #Generate raster
+    plt.eventplot(spikes, color=colorCodes)
     plt.xlim(right=3)
     plt.xlim(left=-1)
     plt.xlabel("Time (s)")
     plt.yticks([])
     plt.show()
 
-#Generate the visulations
-generate_PSTH(trial_df,spike_df,1)
-pdf = matplotlib.backends.backend_pdf.PdfPages("output.pdf")
-for x in range(10):
-    fig = generate_PSTH(trial_df,spike_df,x)
-    pdf.savefig(fig)
-pdf.close()
+# #Generate the visulations
+generate_raster(session_data, 1)
+
+# generate_PSTH(trial_df,spike_df,1)
+# pdf = matplotlib.backends.backend_pdf.PdfPages("output.pdf")
+# for x in range(10):
+#     fig = generate_PSTH(trial_df,spike_df,x)
+#     pdf.savefig(fig)
+# pdf.close()
 
 #----------------------------------------------------------
 
