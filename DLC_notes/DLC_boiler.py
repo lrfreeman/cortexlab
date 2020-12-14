@@ -5,6 +5,17 @@ cd deeplabcut
 ipython
 import DeepLabCut
 
+#SSH commands
+#Test for where the stoage space
+sudo du / --max-depth=2 | sort -h
+lsblk #Tells you which volumes are mounted
+df -h #Tells you the storage usage on each volume
+sudo rm -fr /pathtofolder # How to remove things on linux for example sudo rm -fr /usr/local/cuda-9.2
+sudo du -h /home/ubuntu --max-depth=2 | sort -h #Tells you what things are taking up what storage for the specific file
+#run this to see for the whole machine where the storage usage is
+sudo du -h / --max-depth=2 | sort -h
+
+
 use sudo nano /etc/ssh/sshd_config
 to change ClientAliveInterval 300
 so don't get broekn pipe

@@ -149,8 +149,8 @@ def map_lick_to_trial_type(lick_df,session_data):
     #Output a data frame with an array of licks and what trial type that lick occured in
     return(lick_df)
 
+#A function to comput a dataframe of the time of first lick
 def compute_1st_lick(lick_df):
-    #Potential bug as the number of first licks don't match total trial len
     data_frame = lick_df.sort_values(by="Time Licking", ignore_index=True)
     post_reward_lick_dict = {}
     first_lick = {}
