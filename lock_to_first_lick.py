@@ -71,6 +71,9 @@ cherry_reward_lick_trials,grape_reward_lick_trials,both_reward_lick_trials,no_re
 #Split data by trial type so spike data can be split by reward
 cherry_reward_trials, grape_reward_trials, both_reward_trials, no_reward_trials = split_data_by_trial_type(trial_df)
 
+print(cherry_reward_trials)
+print(cherry_reward_lick_trials)
+
 # A function to return counts of spikes / x per trial into bins and lock to first lick
 def lock_and_count(time,bins,first_lick_df):
     lock_time = {}
@@ -163,14 +166,6 @@ def generate_PSTH(trial_df,spike_df,cellID):
     bothreward_spike_counts = count_to_trial(both_reward_lick_trials, spike_counts)
     noreward_spike_counts = count_to_trial(no_reward_lick_trials, spike_counts)
 
-    # #Lick counts not split by trial
-    # total_cherry_lick_counts = count_to_trial(cherry_reward_trials, new_cherry_lick_counts)
-    # total_grape_lick_counts = count_to_trial(grape_reward_trials, new_grape_lick_counts)
-    # # total_center_lick_counts = count_to_trial(cherry_reward_trials, new_cherry_lick_counts)
-    # total_cherry_lick_counts = pd.DataFrame(total_cherry_lick_counts).sum(axis=0)
-    # total_grape_lick_counts = pd.DataFrame(total_grape_lick_counts).sum(axis=0)
-    # # total_center_lick_counts = pd.DataFrame(new_center_lick_counts).sum(axis=0)
-
     #Trial type licks - new test
     cherry_trial_cherry_licks = count_to_trial(cherry_reward_lick_trials, new_cherry_lick_counts)
     cherry_trial_grape_licks = count_to_trial(cherry_reward_lick_trials, new_grape_lick_counts)
@@ -240,14 +235,6 @@ def generate_PSTH(trial_df,spike_df,cellID):
     normalised_no_reward_trial_grape_licks  = no_reward_trial_grape_licks      / len(no_reward_lick_trials.values) * 100
     normalised_no_reward_trial_center_licks = no_reward_trial_center_licks     / len(no_reward_lick_trials.values) * 100
     noRewardLicks = (normalised_no_reward_trial_cherry_licks, normalised_no_reward_trial_grape_licks, normalised_no_reward_trial_center_licks)
-
-    # normalised_total_cherry_licks = total_cherry_lick_counts / len(cherry_reward_lick_trials.values) * 100
-    # normalised_total_grape_licks = total_grape_lick_counts / len(grape_reward_lick_trials.values) * 100
-    # # normalised_total_center_licks = total_grape_center_counts / len(grape_reward_lick_trials.values) * 100
-
-    # normalised_total_cherry_licks = total_cherry_lick_counts / len(cherry_reward_lick_trials.values) * 100
-    # normalised_total_grape_licks = total_grape_lick_counts / len(grape_reward_lick_trials.values) * 100
-    # normalised_total_center_licks = total_grape_center_counts / len(grape_reward_lick_trials.values) * 100
 
     return(bin_centres, spike_rates, cherryTrialLicks, grapeTrialLicks, bothRewardLicks, noRewardLicks)
 
@@ -322,56 +309,6 @@ def generate_graphs(trial_df,spike_df,cellID):
     return(fig)
 
     #---------------------------------------------------------------------------
-
-    # #Licking subplot
-    # ax2.plot(bin_centres, normalised_total_cherry_licks, color='r', label="Lick of cherry spout")
-    # ax2.plot(bin_centres, normalised_total_grape_licks, color='m', label="Lick of grape spout")
-    # # ax2.plot(bin_centres, avg_center_lick, color='k', label="Lick center of spouts")
-    # ax2.set(ylabel="Perc. frames licking", title="Licking")
-    # ax2.xaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax2.yaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax2.legend(loc='upper right')
-    # # ax2.set_ylim([0, 18])
-
-    # #Licking subplot
-    # ax2.plot(bin_centres, normalised_cherry_trial_cherry_licks, color='r', label="Lick of cherry spout")
-    # ax2.plot(bin_centres, normalised_cherry_trial_grape_licks, color='m', label="Lick of grape spout")
-    # ax2.plot(bin_centres, normalised_cherry_trial_center_licks, color='k', label="Lick center of spouts")
-    # ax2.set(ylabel="Perc. frames licking", title="Cherry Reward Trials")
-    # ax2.xaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax2.yaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax2.legend(loc='upper right')
-    # ax2.set_ylim([0, 18])
-    #
-    # #Licking subplot
-    # ax3.plot(bin_centres, normalised_grape_trial_cherry_licks, color='r', label="Lick of cherry spout")
-    # ax3.plot(bin_centres, normalised_grape_trial_grape_licks, color='m', label="Lick of grape spout")
-    # ax3.plot(bin_centres, normalised_grape_trial_center_licks, color='k', label="Lick center of spouts")
-    # ax3.set(ylabel="Perc. frames licking", title="Grape Reward Trials")
-    # ax3.xaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax3.yaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax3.legend(loc='upper right')
-    # ax3.set_ylim([0, 18])
-    #
-    # #Licking subplot
-    # ax5.plot(bin_centres, normalised_both_reward_trial_cherry_licks, color='r', label="Lick of cherry spout")
-    # ax5.plot(bin_centres, normalised_both_reward_trial_grape_licks, color='m', label="Lick of grape spout")
-    # ax5.plot(bin_centres, normalised_both_reward_trial_center_licks, color='k', label="Lick center of spouts")
-    # ax5.set(ylabel="Perc. frames licking", title="Both Reward Trials")
-    # ax5.xaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax5.yaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax5.legend(loc='upper right')
-    # ax5.set_ylim([0, 18])
-    #
-    # #Licking subplot
-    # ax6.plot(bin_centres, normalised_no_reward_trial_cherry_licks, color='r', label="Lick of cherry spout")
-    # ax6.plot(bin_centres, normalised_no_reward_trial_grape_licks, color='m', label="Lick of grape spout")
-    # ax6.plot(bin_centres, normalised_no_reward_trial_center_licks, color='k', label="Lick center of spouts")
-    # ax6.set(ylabel="Perc. frames licking",xlabel="Time from Outcome [s] (Spike Time - Reward Time)", title="No Reward Trials")
-    # ax6.xaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax6.yaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax6.legend(loc='upper right')
-    # ax6.set_ylim([0, 18])
 
 # #Generate the visulations
 generate_graphs(trial_df,spike_df,1)
