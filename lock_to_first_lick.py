@@ -1,61 +1,48 @@
-import PredictLicking.is_licking as lick
 import matplotlib.backends.backend_pdf
-import electrophysiology.ingest_timesync as ingest
 from matplotlib.ticker import MaxNLocator
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import time
+import test_class as CL
 
+"""-----------------------MISC----------------------"""
 #Extend data print rows
 # pd.set_option("display.max_rows", None, "display.max_columns", None)
 
 #Performance checks
 start_time = time.time()
 
-#-------------------------------------------------------
+"""--------------------Upload Data------------------"""
+
+data = CL.CortexLab('/Users/laurence/Desktop/Neuroscience/mproject/data/processed_physdata/aligned_physdata_KM011_2020-03-23_probe1.mat',
+                 '/Users/laurence/Desktop/Neuroscience/mproject/data/KM011_video_timestamps/2020-03-23/face_timeStamps.mat',
+                 '/Users/laurence/Desktop/Neuroscience/mproject/data/23_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv')
+
+trial_df, spike_df = data.load_data(data.session_data)
 
 # #Configure the data - 24th Session
 # session_data = '/Users/laurence/Desktop/Neuroscience/mproject/data/processed_physdata/aligned_physdata_KM011_2020-03-24_probe1.mat'
 # frame_alignment_data = "/Users/laurence/Desktop/Neuroscience/mproject/data/KM011_video_timestamps/2020-03-24/face_timeStamps.mat"
 # dlc_video_csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/24_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv"
 
-#Configure the data - 23th Session
-session_data = '/Users/laurence/Desktop/Neuroscience/mproject/data/processed_physdata/aligned_physdata_KM011_2020-03-23_probe1.mat'
-frame_alignment_data = "/Users/laurence/Desktop/Neuroscience/mproject/data/KM011_video_timestamps/2020-03-23/face_timeStamps.mat"
-dlc_video_csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/23_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv"
+# #Configure the data - 23th Session
+# session_data = '/Users/laurence/Desktop/Neuroscience/mproject/data/processed_physdata/aligned_physdata_KM011_2020-03-23_probe1.mat'
+# frame_alignment_data = "/Users/laurence/Desktop/Neuroscience/mproject/data/KM011_video_timestamps/2020-03-23/face_timeStamps.mat"
+# dlc_video_csv = "/Users/laurence/Desktop/Neuroscience/mproject/data/23_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv"
 
 # #Configure the data - 20th Session
 # session_data = '/Users/laurence/Desktop/Neuroscience/mproject/data/processed_physdata/aligned_physdata_KM011_2020-03-20_probe0.mat'
 
-#-------------------------------------------------------
+"""-----------------Create Some Bins-------------------------------"""
 
 #Create bins that are 200ms
 bins = np.arange(-1,3,0.2).tolist()
 bins = [ round(elem, 2) for elem in bins ]
 
-#Load the data
-frame_times = ingest.import_frame_times(frame_alignment_data)
-df = lick.generate_licking_times(frame_times, dlc_video_csv)
-lick_df = lick.map_lick_to_trial_type(df,session_data)
-total_frames = len(df)
-
-#Data frame containing first lick
-first_lick_df = lick.compute_1st_lick(lick_df)
-
-#Load data for PSTH by generating trial df and spike df
-def load_data_for_graphs(session_data):
-    #Create Trial DF
-    trial_df, spike_times, cluster_IDs, cluster_types = ingest.convert_mat(session_data)
-    trial_df = trial_df.drop(columns=["nTrials"])
-
-    num_of_cluster_types = len(cluster_types[0])
-
-    #Create Spike and Cluster ID DF
-    spike_df =  pd.DataFrame(spike_times, columns = ["Spike_Times"])
-    spike_df["cluster_ids"] = cluster_IDs
-    return(trial_df,spike_df, num_of_cluster_types)
-trial_df, spike_df, num_of_cluster_types = load_data_for_graphs(session_data)
+"""-----------------Compute lick data-------------------------------"""
+first_lick_df, lick_df, df = data.compute_the_first_lick()
+print(first_lick_df)
 
 #A function to split lick data or spike data by trial type
 def split_data_by_trial_type(data_frame):
@@ -70,9 +57,6 @@ cherry_reward_lick_trials,grape_reward_lick_trials,both_reward_lick_trials,no_re
 
 #Split data by trial type so spike data can be split by reward
 cherry_reward_trials, grape_reward_trials, both_reward_trials, no_reward_trials = split_data_by_trial_type(trial_df)
-
-print(cherry_reward_trials)
-print(cherry_reward_lick_trials)
 
 # A function to return counts of spikes / x per trial into bins and lock to first lick
 def lock_and_count(time,bins,first_lick_df):
@@ -90,7 +74,7 @@ def count_to_trial(trial_type, data_counts):
     count = [data_counts[keys[x]] for x in range(len(data_counts)) if keys[x] in list(trial_type["Trial_ID"].values)]
     return(count)
 
-# #Raster locked to first lick
+#Raster locked to first lick
 def lock_and_sort_for_raster(time,first_lick_df):
     lock_time = {}
     trial_spike_times = {}
@@ -242,13 +226,12 @@ def generate_PSTH(trial_df,spike_df,cellID):
 def generate_graphs(trial_df,spike_df,cellID):
 
     #Load data for graphs
-
     colorCodes, spikes = generate_raster(trial_df,spike_df,cellID)
     bin_centres, spike_rates, cherryTrialLicks, grapeTrialLicks, bothRewardLicks, noRewardLicks = generate_PSTH(trial_df,spike_df,cellID)
 
     #--------------------------------------------------------------------------
     #Outline subplots
-    fig, (ax1, ax2, ax3, ax4, ax5, ax6) = plt.subplots(6, sharex=True)
+    fig, (ax1, ax2) = plt.subplots(2, sharex=True)
 
     #Plot PSTH
     ax1.plot(bin_centres,spike_rates[0], color='r', label="Cherry Reward")
@@ -256,53 +239,53 @@ def generate_graphs(trial_df,spike_df,cellID):
     ax1.plot(bin_centres,spike_rates[2], color='b', label="Both Reward")
     ax1.plot(bin_centres,spike_rates[3], color='k', label="No Reward")
     ax1.legend(loc='upper right')
-    ax1.set(title="PSTH", ylabel="Firing Rates (sp/s)")
+    ax1.set(title="PSTH - Locked to first lick", ylabel="Firing Rates (sp/s)")
 
     #Plot spike Raster
     ax2.eventplot(spikes, color=colorCodes)
     ax2.set_xlim(right=3)
     ax2.set_xlim(left=-1)
-    ax2.set(title="Spike Raster", xlabel="Time (s)", ylabel="Trials")
+    ax2.set(title="Spike Raster", xlabel="Time from Outcome [s] (Spike Time - First Lick Time)", ylabel="Trials")
 
+    # # #Licking subplot
+    # ax3.plot(bin_centres, cherryTrialLicks[0], color='r', label="Lick of cherry spout")
+    # ax3.plot(bin_centres, cherryTrialLicks[1], color='m', label="Lick of grape spout")
+    # ax3.plot(bin_centres, cherryTrialLicks[2], color='k', label="Lick center of spouts")
+    # ax3.set(ylabel="Perc. frames licking", title="Cherry Reward Trials")
+    # ax3.xaxis.set_major_locator(MaxNLocator(integer=True))
+    # ax3.yaxis.set_major_locator(MaxNLocator(integer=True))
+    # ax3.legend(loc='upper right')
+    # ax3.set_ylim([0, 18])
+    #
     # #Licking subplot
-    ax3.plot(bin_centres, cherryTrialLicks[0], color='r', label="Lick of cherry spout")
-    ax3.plot(bin_centres, cherryTrialLicks[1], color='m', label="Lick of grape spout")
-    ax3.plot(bin_centres, cherryTrialLicks[2], color='k', label="Lick center of spouts")
-    ax3.set(ylabel="Perc. frames licking", title="Cherry Reward Trials")
-    ax3.xaxis.set_major_locator(MaxNLocator(integer=True))
-    ax3.yaxis.set_major_locator(MaxNLocator(integer=True))
-    ax3.legend(loc='upper right')
-    ax3.set_ylim([0, 18])
-
-    #Licking subplot
-    ax4.plot(bin_centres, grapeTrialLicks[0], color='r', label="Lick of cherry spout")
-    ax4.plot(bin_centres, grapeTrialLicks[1], color='m', label="Lick of grape spout")
-    ax4.plot(bin_centres, grapeTrialLicks[2], color='k', label="Lick center of spouts")
-    ax4.set(ylabel="Perc. frames licking", title="Grape Reward Trials")
-    ax4.xaxis.set_major_locator(MaxNLocator(integer=True))
-    ax4.yaxis.set_major_locator(MaxNLocator(integer=True))
-    ax4.legend(loc='upper right')
-    ax4.set_ylim([0, 18])
-
-    #Licking subplot
-    ax5.plot(bin_centres, bothRewardLicks[0], color='r', label="Lick of cherry spout")
-    ax5.plot(bin_centres, bothRewardLicks[1], color='m', label="Lick of grape spout")
-    ax5.plot(bin_centres, bothRewardLicks[2], color='k', label="Lick center of spouts")
-    ax5.set(ylabel="Perc. frames licking", title="Both Reward Trials")
-    ax5.xaxis.set_major_locator(MaxNLocator(integer=True))
-    ax5.yaxis.set_major_locator(MaxNLocator(integer=True))
-    ax5.legend(loc='upper right')
-    ax5.set_ylim([0, 18])
-
-    #Licking subplot
-    ax6.plot(bin_centres, noRewardLicks[0], color='r', label="Lick of cherry spout")
-    ax6.plot(bin_centres, noRewardLicks[1], color='m', label="Lick of grape spout")
-    ax6.plot(bin_centres, noRewardLicks[2], color='k', label="Lick center of spouts")
-    ax6.set(ylabel="Perc. frames licking",xlabel="Time from Outcome [s] (Spike Time - Reward Time)", title="No Reward Trials")
-    ax6.xaxis.set_major_locator(MaxNLocator(integer=True))
-    ax6.yaxis.set_major_locator(MaxNLocator(integer=True))
-    ax6.legend(loc='upper right')
-    ax6.set_ylim([0, 18])
+    # ax4.plot(bin_centres, grapeTrialLicks[0], color='r', label="Lick of cherry spout")
+    # ax4.plot(bin_centres, grapeTrialLicks[1], color='m', label="Lick of grape spout")
+    # ax4.plot(bin_centres, grapeTrialLicks[2], color='k', label="Lick center of spouts")
+    # ax4.set(ylabel="Perc. frames licking", title="Grape Reward Trials")
+    # ax4.xaxis.set_major_locator(MaxNLocator(integer=True))
+    # ax4.yaxis.set_major_locator(MaxNLocator(integer=True))
+    # ax4.legend(loc='upper right')
+    # ax4.set_ylim([0, 18])
+    #
+    # #Licking subplot
+    # ax5.plot(bin_centres, bothRewardLicks[0], color='r', label="Lick of cherry spout")
+    # ax5.plot(bin_centres, bothRewardLicks[1], color='m', label="Lick of grape spout")
+    # ax5.plot(bin_centres, bothRewardLicks[2], color='k', label="Lick center of spouts")
+    # ax5.set(ylabel="Perc. frames licking", title="Both Reward Trials")
+    # ax5.xaxis.set_major_locator(MaxNLocator(integer=True))
+    # ax5.yaxis.set_major_locator(MaxNLocator(integer=True))
+    # ax5.legend(loc='upper right')
+    # ax5.set_ylim([0, 18])
+    #
+    # #Licking subplot
+    # ax6.plot(bin_centres, noRewardLicks[0], color='r', label="Lick of cherry spout")
+    # ax6.plot(bin_centres, noRewardLicks[1], color='m', label="Lick of grape spout")
+    # ax6.plot(bin_centres, noRewardLicks[2], color='k', label="Lick center of spouts")
+    # ax6.set(ylabel="Perc. frames licking",xlabel="Time from Outcome [s] (Spike Time - First Lick Time)", title="No Reward Trials")
+    # ax6.xaxis.set_major_locator(MaxNLocator(integer=True))
+    # ax6.yaxis.set_major_locator(MaxNLocator(integer=True))
+    # ax6.legend(loc='upper right')
+    # ax6.set_ylim([0, 18])
 
     #Show plots
     plt.show()
@@ -310,16 +293,15 @@ def generate_graphs(trial_df,spike_df,cellID):
 
     #---------------------------------------------------------------------------
 
-# #Generate the visulations
-generate_graphs(trial_df,spike_df,1)
+#Generate a single visulations
+generate_graphs(trial_df,spike_df,7)
 
-# generate_PSTH(trial_df,spike_df,1)
+# Multiple viz gen
 # pdf = matplotlib.backends.backend_pdf.PdfPages("output.pdf")
-# for x in range(2):
-#     fig = generate_PSTH(trial_df,spike_df,x)
+# for x in range(1):
+#     fig = generate_graphs(trial_df,spike_df,x)
 #     pdf.savefig(fig)
 # pdf.close()
-
 #--------------------------------------1§--------------------
 
 # # #Tests
