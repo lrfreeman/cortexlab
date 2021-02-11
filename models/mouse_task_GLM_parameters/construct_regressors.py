@@ -9,11 +9,11 @@ from ingest_timesync import convert_mat
 #Extend dfs
 # pd.set_option("display.max_rows", None, "display.max_columns", None)
 
-def load_data():
+def load_data(file):
 
     #Create trial df for mouse task
-    session_data = '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/processed_physdata/aligned_physdata_KM011_2020-03-23_probe1.mat'
-    trial_df, spike_times, cluster_IDs, cluster_types = convert_mat(session_data)
+    # session_data = '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/processed_physdata/aligned_physdata_KM011_2020-03-23_probe1.mat'
+    trial_df, spike_times, cluster_IDs, cluster_types = convert_mat(file)
     data = trial_df.drop(columns=["nTrials", "trial_start_times", "reward_times"])
 
     #Create a single reward column as a boolean
@@ -129,8 +129,8 @@ def construct_regressors(data,nBack):
     return(regressors)
 
 #Functions required to test this module
-data = load_data()
-# print(data)
-regressors = construct_regressors(data,10)
-print(regressors)
-print("Shape of Regessors:", regressors.shape)
+# data = load_data()
+# # print(data)
+# regressors = construct_regressors(data,10)
+# print(regressors)
+# print("Shape of Regessors:", regressors.shape)
