@@ -38,7 +38,7 @@ outcome_weights = weights[20:30].reset_index(drop=True)
 outcome_weights.index += 1
 
 """Plotting graphs"""
-fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3)
+fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, ncols=1)
 ax1.plot(reward_seeking_weights)
 ax1.set(title="Reward Seeking - Interaction term", ylabel="Regression Weights", xlabel="Trials in the past")
 ax1.set_xlim(10,1)

@@ -14,7 +14,7 @@ from construct_regressors import *
 start_time = time.time()
 
 """Pull out all the session files contained within the data folder"""
-sessions = glob.glob("/Users/laurence/Desktop/Neuroscience/kevin_projects/data/processed_physdata/*.mat")
+sessions = glob.glob("/Users/laurence/Desktop/Neuroscience/kevin_projects/data/processed_physdata/Single_probes_for_cog_model/*.mat")
 
 grape_parameter = []
 cherry_parameter = []
