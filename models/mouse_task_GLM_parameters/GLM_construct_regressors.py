@@ -5,6 +5,7 @@ import pandas as pd
 #Change system path so I can call this module with scripts from other folders within the application
 sys.path.insert(1,'/Users/laurence/Desktop/Neuroscience/kevin_projects/code/mousetask/electrophysiology')
 from ingest_timesync import convert_mat
+# from GLM_classes import *
 
 #Extend dfs
 # pd.set_option("display.max_rows", None, "display.max_columns", None)
@@ -16,7 +17,7 @@ def load_data(file):
     trial_df, spike_times, cluster_IDs, cluster_types = convert_mat(file)
     data = trial_df.drop(columns=["nTrials", "trial_start_times", "reward_times"])
 
-    #Create a single reward column as a boolean
+      #Create a single reward column as a boolean
     data["rewards"] = 0
     data["both_rewards"] = 0
     reward_data =  data.loc[(data["left_rewards"] == 1) | (data["right_rewards"] == 1)]
@@ -35,13 +36,14 @@ def construct_regressors(data,nBack):
     regressor_cherry = np.zeros((1,nBack))
     regressor_both = np.zeros((1,nBack))
     regressor_neither = np.zeros((1,nBack))
-    nChoices = len(data)
+    nChoices = data._len_nChoices
+    # nChoices = Synth_Data()._nChoices
     regressors = np.zeros((nChoices,nBack * 4))
 
     # Update regregressors
     for choice in range(nChoices):
         #Which side was picked
-        side = data.at[choice,'left_choices']
+        side = data._data_frame.at[choice,'left_choices']
 
         #Fill in the regressor
         regressors[choice,0:10] = regressor_cherry
@@ -55,10 +57,10 @@ def construct_regressors(data,nBack):
 
         #update reward history vectors
         #Don't understand
-        reward = data.at[choice,'rewards']
-        grape_reward = data.at[choice, 'left_rewards']
-        cherry_reward = data.at[choice, 'right_rewards']
-        both_rewards = data.at[choice, 'both_rewards']
+        # reward = data.at[choice,'rewards']
+        grape_reward = data._data_frame.at[choice, 'left_rewards']
+        cherry_reward = data._data_frame.at[choice, 'right_rewards']
+        # both_rewards = data.at[choice, 'both_rewards']
         cherry = 0
         grape = 0
         both = 0
@@ -78,7 +80,7 @@ def construct_regressors(data,nBack):
                 grape = 1
                 both = 0
                 neither = 0
-            elif cherry_reward ==1 and grape_reward == 1:
+            elif cherry_reward == 1 and grape_reward == 1:
                 cherry = 0
                 grape = 0
                 both = 1
