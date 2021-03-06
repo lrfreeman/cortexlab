@@ -33,6 +33,7 @@ def load_data(file):
     return(data)
 
 data = load_data(file)
+print(data)
 # n_trials = len(data)
 
 """Choices / Code to convert choices into binary to solve concat error"""
@@ -46,7 +47,6 @@ right_choices = choices[choices == 0].dropna()
 left_choices  = choices[choices == 1].dropna()
 right_choice_trials = len(right_choices)
 left_choice_trials = len(left_choices)
-print(left_choices)
 
 # #---------------------------------------------------------
 #Create visulisations
@@ -57,4 +57,4 @@ plt.legend()
 ax1.set(title = 'Animal Choices',
         xlabel = 'Trial Number',
         ylabel = 'Choice')
-plt.show()
+# plt.show()

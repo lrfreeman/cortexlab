@@ -8,10 +8,10 @@ reward_prob_low = 0.2
 distracter_prob = 0.2
 
 # Agent Parameters
-learning_rate_RL = 0.5
-learning_rate_habit = 0.1
-weight_RL = 3
-weight_habit = 1
+learning_rate_RL = 0.51
+learning_rate_habit = 0.12
+weight_RL = 2.76
+weight_habit = 1.09
 utility_reward = 1
 utility_distracter = 0
 utility_nothing = -1
@@ -32,7 +32,7 @@ agent = AgentKevinsModel(learning_rate_RL = learning_rate_RL,
       utility_nothing = utility_nothing)
 
 # Experiment Parameters
-n_trials = 5000
+n_trials = 500
 
 # Empty variables to accumulate choices, rewards, block, qs
 choices = np.zeros(n_trials)
@@ -59,7 +59,7 @@ for t in range(n_trials):
   qs[t] = agent.q
   hs[t] = agent.h
 
-# #Plot graphs
+# Plot graphs
 # fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, ncols=1)
 # ax1.plot(reward_probabilities)
 # ax1.set(title="Environment Reward Probabilities", ylabel = "Reward Probabilities")
@@ -71,9 +71,9 @@ for t in range(n_trials):
 # ax3.scatter(np.arange(n_trials), choices, 1)
 # ax3.set(title="Agent Choices", ylabel = "Choices", xlabel = "Trial Number")
 
-# plt.show(s)
+# plt.show()
 
-# print('Agent Reward Rate:', np.mean(rewards))
+print('Agent Reward Rate:', np.mean(rewards))
 
 #Create a DF to input into GLM
 def create_synthetic_data_frame():
