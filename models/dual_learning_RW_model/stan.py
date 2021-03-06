@@ -5,7 +5,6 @@ import pandas as pd
 import numpy as np
 import sys
 import time
-import arviz as az
 
 #Modify system pathway to ensure import works
 sys.path.insert(1,'/Users/laurence/Desktop/Neuroscience/kevin_projects/code/mousetask/models/mouse_task_GLM_parameters')
@@ -72,13 +71,21 @@ transformed parameters {
                 u_trial = u_nothing;
             }
 
-            Q = (1-alpha_rl)*Q + alpha_rl * choices[t_i] * u_trial;
+            if ((u_trial - Q) > 0) {
+            Q = (1-alpha_rl) * Q + alpha_rl * choices[t_i] * u_trial;
+            }
+
+            else if ((u_trial - Q) < 0) {
+            Q = (1-alpha_rl) * Q + alpha_rl * choices[t_i] * u_trial;
+            }
+
             // Habits learning
             H = (1- alpha_habits)* H + alpha_habits * choices[t_i];
         }
     }
 }
 model {
+
 // Priors
 u_cherry ~ normal(0, 1);
 u_grape ~ normal(0, 1);
@@ -87,6 +94,7 @@ beta_rl ~ normal(0, 1);
 beta_bias ~ normal(0, 1);
 alpha_rl ~ beta(3,3);
 alpha_habits ~ beta(3,3);
+
 // increment log likelihood
 target += log_lik;
 }
@@ -150,8 +158,4 @@ print("")
 #Print the time of the process
 print("")
 print("--- %s seconds ---" % (time.time() - start_time))
-
-
-
-
 print("")

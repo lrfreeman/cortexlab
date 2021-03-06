@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 # sns.set()  # Nice plot aesthetic
-# np.random.seed(101)
+# np.random.seed(101) #Keeps random data generation consistent
 
 model = """
 data {
