@@ -57,4 +57,6 @@ plt.legend()
 ax1.set(title = 'Animal Choices',
         xlabel = 'Trial Number',
         ylabel = 'Choice')
+
+
 # plt.show()

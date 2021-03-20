@@ -36,7 +36,8 @@ parameters {
     real<lower=0> beta_habits;
     real beta_bias;
 
-    real<lower=0, upper=1> alpha_rl;
+    real<lower=0, upper=1> positive_alpha_rl;
+    real<lower=0, upper=1> negative_alpha_rl;
     real<lower=0, upper=1> alpha_habits;
 }
 transformed parameters {
@@ -72,8 +73,14 @@ transformed parameters {
                 u_trial = u_nothing;
             }
 
-            Q = (1-alpha_rl)*Q + alpha_rl * choices[t_i] * u_trial;
-            // Habits learning
+            if ((u_trial - Q) > 0) {
+                Q = (1-positive_alpha_rl)*Q + positive_alpha_rl * choices[t_i] * u_trial;
+            }
+
+            else if ((u_trial - Q) < 0) {
+                Q = (1-negative_alpha_rl)*Q + negative_alpha_rl * choices[t_i] * u_trial;
+            }
+
             H = (1- alpha_habits)* H + alpha_habits * choices[t_i];
         }
     }
@@ -85,7 +92,8 @@ u_grape ~ normal(0, 1);
 u_nothing ~ normal(0, 1);
 beta_rl ~ normal(0, 1);
 beta_bias ~ normal(0, 1);
-alpha_rl ~ beta(3,3);
+positive_alpha_rl ~ beta(3,3);
+negative_alpha_rl ~ beta(3,3);
 alpha_habits ~ beta(3,3);
 // increment log likelihood
 target += log_lik;
@@ -117,7 +125,8 @@ u_nothing = -1
 beta_rl = 3
 beta_habits = 1
 beta_bias = 1
-alpha_rl = 0.5
+positive_alpha_rl = 0.5
+negative_alpha_rl = 0.5
 alpha_habits = 0.1
 
 #Put the data in a dictionary
@@ -133,72 +142,77 @@ sm = pystan.StanModel(model_code=model)
 fit = sm.sampling(data=data, iter=1000, chains=4, warmup=500, thin=1, seed=101)
 print(fit)
 
+az_data = az.from_pystan(
+    posterior=fit,
+    log_likelihood={"choices": "log_lik"},
+)
+
+print(az.waic(az_data))
+
 #Create df for the sample data
-summary_dict = fit.summary()
-df = pd.DataFrame(summary_dict['summary'],
-                  columns=summary_dict['summary_colnames'],
-                  index=summary_dict['summary_rownames'])
+# summary_dict = fit.summary()
+# df = pd.DataFrame(summary_dict['summary'],
+#                   columns=summary_dict['summary_colnames'],
+#                   index=summary_dict['summary_rownames'])
 
 # Parameter estimation
 # param_est = sm.optimizing(data=data)
 # print(param_est)
 
-#Extract the traces
-u_cherry = fit['u_cherry']
-u_grape = fit['u_grape']
-u_nothing = fit['u_nothing']
-beta_rl = fit['beta_rl']
-beta_habits = fit['beta_habits']
-beta_bias = fit['beta_bias']
-alpha_rl = fit['alpha_rl']
-alpha_habits = fit['alpha_habits']
-
-def plot_posteriors(param, param_name='parameter'):
-  """Plot the trace and posterior of a parameter."""
-
-  # Summary statistics
-  mean = np.mean(param)
-  # median = np.median(param)
-  cred_min, cred_max = np.percentile(param, 2.5), np.percentile(param, 97.5)
-
-  # Plotting traces
-  # plt.subplot(2,1,1)
-  # plt.plot(param)
-  # plt.xlabel('samples')
-  # plt.ylabel(param_name)
-  # plt.axhline(mean, color='r', lw=2, linestyle='--')
-  # # plt.axhline(median, color='c', lw=2, linestyle='--')
-  # plt.axhline(cred_min, linestyle=':', color='k', alpha=0.2)
-  # plt.axhline(cred_max, linestyle=':', color='k', alpha=0.2)
-  # plt.title('Trace and Posterior Distribution for {}'.format(param_name))
-
-  #Plot Posterior Distributions
-  plt.title('Posterior Distribution for {}'.format(param_name))
-  plt.hist(param, 30, density=True); sns.kdeplot(param, shade=True)
-  plt.xlabel(param_name)
-  plt.ylabel('density')
-  plt.axvline(mean, color='r', lw=2, linestyle='--',label='mean')
-  # plt.axvline(median, color='c', lw=2, linestyle='--',label='median')
-  plt.axvline(cred_min, linestyle=':', color='k', alpha=0.2, label='95% CI')
-  plt.axvline(cred_max, linestyle=':', color='k', alpha=0.2)
-  plt.gcf().tight_layout()
-  # plt.legend()
-  plt.show()
-
-plot_posteriors(u_cherry, "u_cherry")
-plot_posteriors(u_grape, "u_grape")
-plot_posteriors(u_nothing, "u_nothing")
-plot_posteriors(beta_rl, "beta_rl")
-plot_posteriors(beta_habits, "beta_habits")
-plot_posteriors(beta_bias, "beta_bias")
-plot_posteriors(alpha_rl, "alpha_rl")
-plot_posteriors(alpha_habits, "alpha_habits")
-
-#Print the time of the process
-print("")
-print("--- %s seconds ---" % (time.time() - start_time))
-
-
-
-
-print("")
+# #Extract the traces
+# u_cherry = fit['u_cherry']
+# u_grape = fit['u_grape']
+# u_nothing = fit['u_nothing']
+# beta_rl = fit['beta_rl']
+# beta_habits = fit['beta_habits']
+# beta_bias = fit['beta_bias']
+# positive_alpha_rl = fit['positive_alpha_rl']
+# negative_alpha_rl = fit['negative_alpha_rl']
+# alpha_habits = fit['alpha_habits']
+#
+# def plot_posteriors(param, param_name='parameter'):
+#   """Plot the trace and posterior of a parameter."""
+#
+#   # Summary statistics
+#   mean = np.mean(param)
+#   # median = np.median(param)
+#   cred_min, cred_max = np.percentile(param, 2.5), np.percentile(param, 97.5)
+#
+#   # Plotting traces
+#   # plt.subplot(2,1,1)
+#   # plt.plot(param)
+#   # plt.xlabel('samples')
+#   # plt.ylabel(param_name)
+#   # plt.axhline(mean, color='r', lw=2, linestyle='--')
+#   # # plt.axhline(median, color='c', lw=2, linestyle='--')
+#   # plt.axhline(cred_min, linestyle=':', color='k', alpha=0.2)
+#   # plt.axhline(cred_max, linestyle=':', color='k', alpha=0.2)
+#   # plt.title('Trace and Posterior Distribution for {}'.format(param_name))
+#
+#   #Plot Posterior Distributions
+#   plt.title('Posterior Distribution for {}'.format(param_name))
+#   plt.hist(param, 30, density=True); sns.kdeplot(param, shade=True)
+#   plt.xlabel(param_name)
+#   plt.ylabel('density')
+#   plt.axvline(mean, color='r', lw=2, linestyle='--',label='mean')
+#   # plt.axvline(median, color='c', lw=2, linestyle='--',label='median')
+#   plt.axvline(cred_min, linestyle=':', color='k', alpha=0.2, label='95% CI')
+#   plt.axvline(cred_max, linestyle=':', color='k', alpha=0.2)
+#   plt.gcf().tight_layout()
+#   # plt.legend()
+#   plt.show()
+#
+# plot_posteriors(u_cherry, "u_cherry")
+# plot_posteriors(u_grape, "u_grape")
+# plot_posteriors(u_nothing, "u_nothing")
+# plot_posteriors(beta_rl, "beta_rl")
+# plot_posteriors(beta_habits, "beta_habits")
+# plot_posteriors(beta_bias, "beta_bias")
+# plot_posteriors(positive_alpha_rl, "+alpha_rl")
+# plot_posteriors(negative_alpha_rl, "-alpha_rl")
+# plot_posteriors(alpha_habits, "alpha_habits")
+#
+# #Print the time of the process
+# print("")
+# print("--- %s seconds ---" % (time.time() - start_time))
+# print("")
