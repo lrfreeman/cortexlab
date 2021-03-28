@@ -21,13 +21,24 @@ model = """
 // Stan code for a mixture-of-exponentials model on the distracer rewards task
 data {
 
+    //Data variables
     int<lower=0> nTrials;
     // int<lower=0,upper=1> trial_types[nTrials]; - not needed for synethic data
     int<lower=-1,upper=1> choices[nTrials]; //
     int<lower=0,upper=1> outcomes_cherry[nTrials];
     int<lower=0,upper=1> outcomes_grape[nTrials];
 
+    //Test data variables
+    //int<lower=0> nTrials_test;
+    //int<lower=0,upper=1> trial_types_test[nTrials_test];
+    //int<lower=-1,upper=1> choices_test[nTrials_test];
+    //int<lower=0,upper=1> outcomes_cherry_test[nTrials_test];
+    //int<lower=0,upper=1> outcomes_grape_test[nTrials_test];
+
+    // What is this? int inc[3];
+
 }
+
 parameters {
     real u_cherry;
     real u_grape;
@@ -40,6 +51,7 @@ parameters {
     real<lower=0, upper=1> alpha_rl;
     real<lower=0, upper=1> alpha_habits;
 }
+
 transformed parameters {
     real log_lik; // Accumulator for log-likelihood
     // Name-space for the loop over trials
@@ -79,7 +91,9 @@ transformed parameters {
         }
     }
 }
+
 model {
+
 // Priors
 u_cherry ~ normal(0, 1);
 u_grape ~ normal(0, 1);
@@ -94,7 +108,7 @@ target += log_lik;
 """
 
 #Load Data from a personal library that generated synthetic data
-data = Data("s_data")._data_frame
+data = Data("train_b_data")._data_frame
 
 #Map data from data frame to stan variables
 choices = data["left_choices"]
@@ -110,16 +124,6 @@ outcomes_grape = np.array(outcomes_grape, dtype=np.int)
 
 outcomes_cherry = data["right_rewards"]
 outcomes_cherry = np.array(outcomes_cherry, dtype=np.int)
-
-# Parameters to be inferred - Why put in parameters when these are the ones that get inferred?
-# u_cherry = 1
-# u_grape = 0
-# u_nothing = -1
-# beta_rl = 3
-# beta_habits = 1
-# beta_bias = 1
-# alpha_rl = 0.5
-# alpha_habits = 0.1
 
 #Put the data in a dictionary
 data = {'nTrials': nTrials,
@@ -140,16 +144,10 @@ df = pd.DataFrame(summary_dict['summary'],
                   columns=summary_dict['summary_colnames'],
                   index=summary_dict['summary_rownames'])
 
-# print(df)
-
 az_data = az.from_pystan(
     posterior=fit,
     log_likelihood={"choices": "log_lik"},
 )
-
-print(az.waic(az_data))
-#
-# print(az_data)
 
 # # Parameter estimation
 # param_est = sm.optimizing(data=data)
@@ -206,7 +204,8 @@ print(az.waic(az_data))
 # plot_posteriors(alpha_rl, "alpha_rl")
 # plot_posteriors(alpha_habits, "alpha_habits")
 #
-# #Print the time of the process
-# print("")
-# print("--- %s seconds ---" % (time.time() - start_time))
-# print("")
+
+#Print the time of the process
+print("")
+print("--- %s seconds ---" % (time.time() - start_time))
+print("")

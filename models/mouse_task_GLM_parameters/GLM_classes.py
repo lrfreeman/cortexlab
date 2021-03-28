@@ -13,28 +13,30 @@ class Data:
             self._data_frame = create_synthetic_data_frame()
             self._len_nChoices = len(self._data_frame)
 
-        elif data_type == "b_data":
-            print("Behavioural Data Generated")
-
-            # """Pull out all the session files contained within the data folder"""
+        elif data_type == "train_b_data":
+            print("Training Behavioural Data Generated")
             sessions = glob.glob("/Users/laurence/Desktop/Neuroscience/kevin_projects/data/processed_physdata/Single_probes_for_cog_model/*.mat")
             data = load_data(sessions[0])
-            for session in range(len(sessions) - 1):
+            for session in range(len(sessions) - 2):
                 data = data.append(load_data(sessions[session + 1]), ignore_index = True)
-
-            # #test for running one session with kevin-----
-            # session = "/Users/laurence/Desktop/Neuroscience/kevin_projects/data/processed_physdata/Single_probes_for_cog_model/aligned_physdata_KM011_2020-03-19_probe0.mat"
-            # data = load_data(session)
-            #---------------------
-
             self._data_frame = data
-            self._len_nChoices = len(self._data_frame)
-
             """Choices / Code to convert choices into binary to solve concat error"""
             """Only analyze trials that are non-vilations and of free choice."""
             good_trials = data.loc[(data["free"] == 1)]
             choices = np.asarray(good_trials["left_choices"])
             choices = np.array(choices, dtype=np.float)
+            self._nChoices = choices
+            self._good_trials = good_trials
 
+        elif data_type == "test_b_data":
+            print("Test Behavioural Data Generated")
+            sessions = glob.glob("/Users/laurence/Desktop/Neuroscience/kevin_projects/data/processed_physdata/Single_probes_for_cog_model/*.mat")
+            data = load_data(sessions[-1])
+            self._data_frame = data
+            """Choices / Code to convert choices into binary to solve concat error"""
+            """Only analyze trials that are non-vilations and of free choice."""
+            good_trials = data.loc[(data["free"] == 1)]
+            choices = np.asarray(good_trials["left_choices"])
+            choices = np.array(choices, dtype=np.float)
             self._nChoices = choices
             self._good_trials = good_trials
