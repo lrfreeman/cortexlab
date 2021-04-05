@@ -8,6 +8,13 @@ import pandas as pd
 import time
 import DLC_Classes as CL
 
+from functools import partial
+import holoviews as hv
+import holoviews.operation.datashader as hd
+import datashader as ds
+from datashader.mpl_ext import dsshow
+import datashader.transfer_functions as tf
+
 #Extend data print rows
 # pd.set_option("display.max_rows", None, "display.max_columns", None)
 
@@ -141,36 +148,7 @@ def new_generate_raster(trial_df, spike_df, cellID):
     nox, noy = prepare_data_for_scatter(m4, noRewardSpikeValues, lenOfNoRewardTrials)
 
     return(cherryx,cherryy,grapex,grapey,bothx,bothy,nox,noy)
-
-def raster_no_rewards(trial_df, spike_df, cellID):
-
-    #####Choose a cell#######
-    spike_df = spike_df.loc[(spike_df["cluster_ids"] == cellID)]
-
-    #Generate spikes for each trial
-    trial_spike_times = lock_and_sort_for_raster(spike_df["Spike_Times"],trial_df)
-
-    x = []
-    y = []
-    for trial in range(len(trial_df)):
-        x.extend(np.asarray(trial_spike_times[trial]))
-        z = [len(trial_spike_times[trial])]
-        y.extend((trial + 1) * z)
-
-    print(len(x))
-    print(len(y))
-
-    return(x, y)
-
 cherryx,cherryy,grapex,grapey,bothx,bothy,nox,noy =  new_generate_raster(trial_df, spike_df, 4)
-
-from functools import partial
-import holoviews as hv
-import holoviews.operation.datashader as hd
-import datashader as ds
-from datashader.mpl_ext import dsshow
-import datashader.transfer_functions as tf
-
 
 #Multiple viz gen
 for n in range(data.numofcells):
@@ -185,17 +163,6 @@ for n in range(data.numofcells):
         plt.xlim(-1, 3)
         plt.savefig('/Users/laurence/Desktop/rasters/CELL{}.png'.format(n))
         plt.close()
-
-# #Multiple viz gen
-# cherryx,cherryy,grapex,grapey,bothx,bothy,nox,noy = new_generate_raster(trial_df, spike_df, 53)
-# df = pd.DataFrame(dict(x=(cherryx + grapex + bothx + nox), y=(cherryy + grapey + bothy + noy)))
-# print(df)
-# # fig = dsshow(df, ds.Point('x', 'y'), aspect='auto')
-# # plt.colorbar(fig)
-# # plt.xlim(-1, 3)
-# # plt.savefig('/Users/laurence/Desktop/rasters/EMPTYCELL.png')
-# # plt.close()
-
 
 #--------------------------------------1§--------------------
 #Print the time of the process
