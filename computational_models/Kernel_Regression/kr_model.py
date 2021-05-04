@@ -1,12 +1,5 @@
-#Import sys library to deal with my poor package setup
-import sys
-
-#Ensure the KR class is in the python path
-sys.path.insert(1,'/Users/laurence/Desktop/Neuroscience/kevin_projects/code/mousetask/kernel_regression_kush')
-sys.path.insert(1,'/Users/laurence/Desktop/Neuroscience/kevin_projects/code/mousetask')
-
 #Import libaries
-import kr_classes as KR
+import KR_classes as KR
 import numpy as np
 import pandas as pd
 import fast_histogram
@@ -17,8 +10,6 @@ from scipy import interpolate
 import random
 import seaborn as sns
 
-# np.set_printoptions(threshold=sys.maxsize)
-
 """Load data"""
 data = KR.ProcessData(session_data = '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/processed_physdata/aligned_physdata_KM011_2020-03-23_probe1.mat',
                       frame_alignment_data = '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/KM011_video_timestamps/2020-03-23/face_timeStamps.mat',
@@ -28,13 +19,10 @@ reward_times = np.asarray(trial_df["reward_times"])
 trial_start_times = np.asarray(trial_df["trial_start_times"])
 spike_times = np.load("/Users/laurence/Desktop/spike_times.npy")
 spike_clusters = np.load("/Users/laurence/Desktop/spike_clusters.npy")
-first_lick_df, df, lick_df = data.produce_1st_lick()
-first_lick_times = np.asarray(first_lick_df["First Lick Times"])
 
-"""Align reward_times to 1s lick_times"""
-data.align_reward_to_first_lick()
-first_lick_times = np.asarray(data.firstlick_df["First Lick Times"])
-reward_times = np.asarray(data.firstlick_df["reward_times"])
+#Need to introduce licking function into class
+# first_lick_df, df, lick_df = data.produce_1st_lick()
+# first_lick_times = np.asarray(first_lick_df["First Lick Times"])
 
 """Free Parameters"""
 time_bin = 0.1 # time bin size for data in seconds
@@ -51,17 +39,21 @@ kernal_window_range = np.arange(-shift_back,shift_forward,1).tolist()
 """Configure data"""
 spike_times = spike_times / sampling_rate # (assumed sampling rate of 30000 Hz?)
 bins = data.bin_the_session(time_bin)
-# bins = data.synth_bin_the_session(0.1, synthetic_trial_number)
 end_time = np.max(spike_times) + 10  # End-point in seconds of the time period you're interested in
-kernels = [reward_times, first_lick_times] # Each item should be an event kernel
-# kernels = [reward_times] # Each item should be an event kernel
-# kernels = [first_lick_times] # Each item should be an event kernel
 
 """Create synethic reward times"""
 reward_times = np.random.default_rng().uniform(0, end_time, synthetic_trial_number)
 
 """Create synethic lick times"""
-first_lick_times = [np.random.default_rng().normal(loc = time, scale = 0.2) for time in reward_times]
+#Create lick times distributed across reward times
+# first_lick_times = [np.random.default_rng().normal(loc = time, scale = 0.2) for time in reward_times]
+
+#Create lick times randomly
+first_lick_times = np.random.default_rng().uniform(0, end_time, synthetic_trial_number)
+
+
+"""Outline the kernels"""
+kernels = [reward_times, first_lick_times] # Each item should be an event kernel
 
 """Create synethic spike times for X"""
 length = 1000000 #Create an artificial number of spikes
@@ -176,15 +168,9 @@ def create_design_matrix(kernel, naming_int):
 
         return (design_matrix)
 
-design_matrix = create_design_matrix(reward_times, 0)
-design_matrix = data.mean_center(design_matrix)
-
+# design_matrix = create_design_matrix(reward_times, 0)
 design_matrix_reward = create_design_matrix(reward_times, 0)
-design_matrix_reward = data.mean_center(design_matrix_reward)
-
 design_matrix_lick = create_design_matrix(first_lick_times, 0)
-design_matrix_lick = data.mean_center(design_matrix_lick)
-
 design_matrix = pd.concat([design_matrix_reward, design_matrix_lick], axis=1)
 
 """Calculate coefficient matrix"""
@@ -208,7 +194,7 @@ bin_centres = 0.5*(kernal_window_range[1:] + kernal_window_range[:-1]) / 10 # to
 """""Plotting logic"""
 plt.figure()
 plt.plot(bin_centres, weights[:44], label = 'Reward Kernel') # cut last weight off ddue to use of bin centres
-# plt.plot(bin_centres, weights[44:-3], label = 'First Lick Kernel') # cut constant and last weighht off
+plt.plot(bin_centres, weights[44:-3], label = 'First Lick Kernel') # cut constant and last weighht off
 plt.xlabel("Kernel Window (seconds)", fontsize = 12)
 plt.ylabel("Coefficients", fontsize = 12)
 # plt.title("Kernel Regression: cluster ID {} ".format(cell_ID), fontsize = 12)
@@ -225,7 +211,6 @@ print("Lenght of Y", len(Y[46:]))
 print("Lenght of Weights", len(weights))
 # print("Correlation coefficient matrix", R1)
 print("")
-
 
 #Tests
 # assert design_matrix.shape == (len(bins), shift_total), "Design Matrix is an incorrect shape"
