@@ -14,12 +14,11 @@ import datashader as ds
 from datashader.mpl_ext import dsshow
 import datashader.transfer_functions as tf
 import panel as pn
+import xarray as xr
 # from holoviews.plotting import maplotlib
 
 #Extend data print rows
-# pd.set_option("display.max_rows", None, "display.max_columns", None)
-
-#PSTHS - 99seconds for 350 cells
+pd.set_option("display.max_rows", None, "display.max_columns", None)
 
 #Performance checks
 start_time = time.time()
@@ -27,8 +26,8 @@ start_time = time.time()
 """-----------------Load some data-------------------------------"""
 
 data = CL.CortexLab('/Users/laurence/Desktop/Neuroscience/kevin_projects/data/processed_physdata/aligned_physdata_KM011_2020-03-23_probe1.mat',
-                    '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/KM011_video_timestamps/2020-03-23/face_timeStamps.mat',
-                    '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/23_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv')
+                         '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/KM011_video_timestamps/2020-03-23/face_timeStamps.mat',
+                         '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/23_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv')
 
 trial_df, spike_df = data.load_data(data.session_data)
 
@@ -36,57 +35,8 @@ trial_df, spike_df = data.load_data(data.session_data)
 # Split data by trial type so spike data can be split by reward
 cherry_reward_trials, grape_reward_trials, both_reward_trials, no_reward_trials = data.split_data_by_trial_type(trial_df)
 
-def split_by_cell(cell_ID):
-    """-----------------Lock data-------------------------------"""
-    #Return spike counts and bin edges for a set of bins for a given trial data frame
-    spike_counts, bin_edges, bin_centres = data.lock_and_count(spike_df.loc[(spike_df["cluster_ids"] == cell_ID)])
+"""----------------------functions"""
 
-    """-----------------Split by trial type-------------------------------"""
-    # #Seperate spikes per trial type
-    cherry_spike_counts = data.count_to_trial(cherry_reward_trials, spike_counts)
-    grape_spike_counts = data.count_to_trial(grape_reward_trials, spike_counts)
-    both_reward_spike_counts = data.count_to_trial(both_reward_trials, spike_counts)
-    no_reward_spike_counts = data.count_to_trial(no_reward_trials, spike_counts)
-
-    """-----------------Calculate firing rates-------------------------------"""
-    cherry_count = pd.DataFrame(cherry_spike_counts).sum(axis=0)
-    cherry_hertz = (cherry_count / len(cherry_spike_counts)) * 5
-
-    grape_count = pd.DataFrame(grape_spike_counts).sum(axis=0)
-    grape_hertz = (grape_count / len(grape_spike_counts)) * 5
-
-    both_reward_count = pd.DataFrame(both_reward_spike_counts).sum(axis=0)
-    both_reward_hertz = (both_reward_count / len(both_reward_spike_counts)) * 5
-
-    no_reward_count = pd.DataFrame(no_reward_spike_counts).sum(axis=0)
-    no_reward_hertz = (no_reward_count / len(no_reward_spike_counts)) * 5
-
-    #--------------------------------------------------------------------------
-    #Outline subplots
-    fig, (ax1) = plt.subplots(1, sharex=True)
-
-    # #Plot PSTH
-    ax1.plot(bin_centres,cherry_hertz[:-1], color='r', label="Cherry Reward")
-    ax1.plot(bin_centres,grape_hertz[:-1], color='m', label="Grape Reward" )
-    ax1.plot(bin_centres,both_reward_hertz[:-1], color='b', label="Both Reward"  )
-    ax1.plot(bin_centres,no_reward_hertz[:-1], color='k', label="No Reward"    )
-    ax1.legend(loc='upper right')
-    ax1.set(title="PSTH - Locked to reward - Cell:{}".format(cell_ID), ylabel="Firing Rates (sp/s)")
-    # plt.show()
-    return(fig)
-
-"""-----------------Plot PSTH-------------------------------"""
-
-# Multiple viz gen
-pdf = matplotlib.backends.backend_pdf.PdfPages("output.pdf")
-for x in range(data.numofcells):
-# for x in range(2):
-    fig = split_by_cell(x)
-    pdf.savefig(fig)
-    plt.close(fig)
-pdf.close()
-
-"""-----------------Spike Raster locked to reward-------------------------------"""
 #Count things and map them to trials
 def count_to_trial(trial_type, data_counts):
     count = [data_counts[x] for x in range(len(trial_df)) if list(data_counts.keys())[x] in trial_type.index.values]
@@ -151,19 +101,76 @@ def new_generate_raster(trial_df, spike_df, cellID):
 
     return(cherryx,cherryy,grapex,grapey,bothx,bothy,nox,noy)
 
-#Create spike rasters locked to reward for all cells
-# for n in range(data.numofcells):
-#     cherryx,cherryy,grapex,grapey,bothx,bothy,nox,noy = new_generate_raster(trial_df, spike_df, n)
-#     df = pd.DataFrame(dict(x=(cherryx + grapex + bothx + nox), y=(cherryy + grapey + bothy + noy)))
-#     if df.empty:
-#         print("Cell number: {} cotains an empty data frame".format(n))
-#         continue
-#     else:
-#         fig = dsshow(df, ds.Point('x', 'y'), aspect='auto')
-#         plt.colorbar(fig)
-#         plt.xlim(-1, 3)
-#         plt.savefig('/Users/laurence/Desktop/rasters/lock_to_reward/lockedtoreward_CELL{}.png'.format(n))
-#         plt.close()
+def split_by_cell(cell_ID):
+    """-----------------Lock data-------------------------------"""
+    #Return spike counts and bin edges for a set of bins for a given trial data frame
+    spike_counts, bin_edges, bin_centres = data.lock_and_count(spike_df.loc[(spike_df["cluster_ids"] == cell_ID)])
+
+    """-----------------Split by trial type-------------------------------"""
+    # #Seperate spikes per trial type
+    cherry_spike_counts = data.count_to_trial(cherry_reward_trials, spike_counts)
+    grape_spike_counts = data.count_to_trial(grape_reward_trials, spike_counts)
+    both_reward_spike_counts = data.count_to_trial(both_reward_trials, spike_counts)
+    no_reward_spike_counts = data.count_to_trial(no_reward_trials, spike_counts)
+
+    """-----------------Calculate firing rates-------------------------------"""
+    cherry_count = pd.DataFrame(cherry_spike_counts).sum(axis=0)
+    cherry_hertz = (cherry_count / len(cherry_spike_counts)) * 5
+
+    grape_count = pd.DataFrame(grape_spike_counts).sum(axis=0)
+    grape_hertz = (grape_count / len(grape_spike_counts)) * 5
+
+    both_reward_count = pd.DataFrame(both_reward_spike_counts).sum(axis=0)
+    both_reward_hertz = (both_reward_count / len(both_reward_spike_counts)) * 5
+
+    no_reward_count = pd.DataFrame(no_reward_spike_counts).sum(axis=0)
+    no_reward_hertz = (no_reward_count / len(no_reward_spike_counts)) * 5
+
+    """--------------------------------------------------------------------------"""
+    #Outline subplots
+    fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, sharex=True)
+
+    # #Plot PSTH
+    ax1.plot(bin_centres,cherry_hertz[:-1], color='r', label="Cherry Reward")
+    ax1.plot(bin_centres,grape_hertz[:-1], color='m', label="Grape Reward" )
+    ax1.plot(bin_centres,both_reward_hertz[:-1], color='b', label="Both Reward"  )
+    ax1.plot(bin_centres,no_reward_hertz[:-1], color='k', label="No Reward"    )
+    ax1.legend(loc='upper right')
+    ax1.set(title="PSTH - Locked to reward - Cell:{}".format(cell_ID), ylabel="Firing Rates (sp/s)")
+
+    cherryx,cherryy,grapex,grapey,bothx,bothy,nox,noy = new_generate_raster(trial_df, spike_df, cell_ID)
+    canvas = ds.Canvas(x_range=(-1,3))
+
+    cherry_df = pd.DataFrame(dict(x=(cherryx), y=(cherryy)))
+    cherry_fig = canvas.points(cherry_df, 'x', 'y', ds.any())
+    # fig.plot.imshow(ax = ax1, add_colorbar = False, cmap = "binary")
+    cherry_fig.plot.imshow(ax = ax5, add_colorbar = False, cmap = "binary")
+
+    grape_df = pd.DataFrame(dict(x=(grapex), y=(grapey)))
+    grape_fig = canvas.points(grape_df, 'x', 'y', ds.any())
+    grape_fig.plot.imshow(ax = ax4, add_colorbar = False, cmap = "binary")
+
+    bothreward_df = pd.DataFrame(dict(x=(bothx), y=(bothy)))
+    bothreward_fig = canvas.points(bothreward_df, 'x', 'y', ds.any())
+    bothreward_fig.plot.imshow(ax = ax3, add_colorbar = False, cmap = "binary")
+
+    no_df = pd.DataFrame(dict(x=(nox), y=(noy)))
+    no_fig = canvas.points(no_df, 'x', 'y', ds.any())
+    no_fig.plot.imshow(ax = ax2, add_colorbar = False, cmap = "binary")
+
+    # plt.show()
+    return(fig)
+
+"""-----------------Plot PSTH-------------------------------"""
+
+# Multiple viz gen
+pdf = matplotlib.backends.backend_pdf.PdfPages("output.pdf")
+# for x in range(data.numofcells):
+for x in range(10):
+    fig = split_by_cell(x)
+    pdf.savefig(fig)
+    plt.close(fig)
+pdf.close()
 
 """-----------------Spike Raster locked to time of first lick-------------------------------"""
 # first_lick_df, lick_df, df = data.compute_the_first_lick()
