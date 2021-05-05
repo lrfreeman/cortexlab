@@ -1,8 +1,8 @@
 #This script is uses to decide whether the mouse is licking or not, and which spout
 import matplotlib.pyplot as plt
 import electrophysiology.ingest_timesync as ingest
-import PredictLicking.process_tongue_data as process
-import PredictLicking.is_licking as lick
+import deepLabCut.process_tongue_data as process
+import deepLabCut.is_licking as lick
 import numpy as np
 import pandas as pd
 from decimal import *

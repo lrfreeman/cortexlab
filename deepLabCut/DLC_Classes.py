@@ -1,4 +1,4 @@
-import PredictLicking.is_licking as lick
+import deepLabCut.is_licking as lick
 import electrophysiology.ingest_timesync as ingest
 import numpy as np
 import pandas as pd

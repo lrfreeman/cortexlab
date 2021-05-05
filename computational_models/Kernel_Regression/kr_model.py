@@ -125,15 +125,16 @@ def create_design_matrix(kernel):
 
         return (design_matrix)
 
-design_matrix = create_design_matrix(reward_times)
-# design_matrix_reward = create_design_matrix(reward_times)
-# design_matrix_lick = create_design_matrix(first_lick_times)
-# design_matrix = pd.concat([design_matrix_reward, design_matrix_lick], axis=1)
+# design_matrix = create_design_matrix(reward_times)
+design_matrix_reward = create_design_matrix(reward_times)
+design_matrix_lick = create_design_matrix(first_lick_times)
+design_matrix = pd.concat([design_matrix_reward, design_matrix_lick], axis=1)
 
 """Calculate coefficient matrix"""
-# R1 = np.corrcoef(design_matrix_reward, design_matrix_lick, rowvar=False)
-# sns.heatmap(R1, cmap = "GnBu", yticklabels=False, xticklabels=False)
-# plt.show()
+R1 = np.corrcoef(design_matrix_reward, design_matrix_lick, rowvar=False)
+sns.heatmap(R1, cmap = "GnBu", yticklabels=False, xticklabels=False)
+plt.title("Correlation coefficient matrix measuring covariance between regressors")
+plt.show()
 
 """Set up design matrix to run within sm.GLM"""
 X = sm.add_constant(design_matrix, prepend=False)
