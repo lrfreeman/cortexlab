@@ -1,15 +1,11 @@
 # Cortexlab Repo
 
-This github repo is a collection of projects undertaken whilst studying neuroscience at the CortexLab at UCL (https://www.ucl.ac.uk/cortexlab/) with Matteo Carandini and Kenneth Harris.
+This github repo is a collection of projects undertaken whilst studying neuroscience at the CortexLab at UCL (https://www.ucl.ac.uk/cortexlab/) with Matteo Carandini and Kenneth Harris. My work is a collaboration with my supervisor Kevin Miller, a post-doc at UCL and a research scientist at Google DeepMind (https://deepmind.com/).
 
-My work is a collaboration with my supervisor Kevin Miller, a post-doc at UCL and a research scientist at Google DeepMind.
-
-<p align="right">
-  <img width="500" img height="100" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117119809-75e58400-ad8a-11eb-88ab-ff77613b696a.png">
-</p>
+The focus of my research is on solving the temporal credit assignment problem in the field of reinforcement learning. Rewards can occur in a temporally delayed fashion. This causes the problem of determining the actions that lead to a certain outcome (Minsky, 1961; https://courses.csail.mit.edu/6.803/pdf/steps.pdf)
 
 
-The project is a collobration with Google DeepMind (https://deepmind.com/). I'm working in close collaboration with Kevin Miller (https://kevinjmiller.org/) and we are focusing on the temporal credit assignment problem. Our project explores the neural correlates of reward during a learning task in mice with the hope we can isolate computations of reward assignment. Ultimately, seeking how neurobiology can inform modern day machine learning algorithms currently used at Google.
+Our project explores the neural correlates of reward during a learning task in mice with the hope we can isolate computations of reward assignment. Ultimately, seeking how neurobiology can inform modern day machine learning algorithms currently used at Google.
 
 The project is split into multiple components: __DeepLabCut__ (An open source deep learning computer vision library) and __Ephys__ (Electrophysiology data combined with the subsequent data analysis)
 
