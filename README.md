@@ -49,3 +49,5 @@ The above correlation coefficient matrix shows that reward times and lick times 
 <p align="center">
   <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117128077-d974af00-ad94-11eb-8b8f-bc2d5baeb655.png">
 </p>
+
+The above coefficient plot is the output of my signal detection algorithm. The coefficients show a clear preference to the reward kernel over licking and thus is able to classify neuronal cells that encode reward rather than licking. Ultimately, this model allows us to analyse the neural correlates of reward whilst removing licking artefacts.  
