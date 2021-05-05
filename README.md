@@ -1,6 +1,15 @@
 # Cortexlab Repo
 
-Contained within this repo is all my work created during my time at the CortexLab at UCL(https://www.ucl.ac.uk/cortexlab/). My research is supervised by the neuroscientists Matteo Carandini and Kenneth Harris. The project is a collobration with Google DeepMind (https://deepmind.com/). I'm working in close collaboration with Kevin Miller (https://kevinjmiller.org/) and we are focusing on the temporal credit assignment problem. Our project explores the neural correlates of reward during a learning task in mice with the hope we can isolate computations of reward assignment. Ultimately, seeking how neurobiology can inform modern day machine learning algorithms currently used at Google.
+This github repo is a collection of projects undertaken whilst studying neuroscience at the CortexLab at UCL (https://www.ucl.ac.uk/cortexlab/) with Matteo Carandini and Kenneth Harris.
+
+My work is a collaboration with my supervisor Kevin Miller, a post-doc at UCL and a research scientist at Google DeepMind.
+
+<p align="right">
+  <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117119809-75e58400-ad8a-11eb-88ab-ff77613b696a.png">
+</p>
+
+
+The project is a collobration with Google DeepMind (https://deepmind.com/). I'm working in close collaboration with Kevin Miller (https://kevinjmiller.org/) and we are focusing on the temporal credit assignment problem. Our project explores the neural correlates of reward during a learning task in mice with the hope we can isolate computations of reward assignment. Ultimately, seeking how neurobiology can inform modern day machine learning algorithms currently used at Google.
 
 The project is split into multiple components: __DeepLabCut__ (An open source deep learning computer vision library) and __Ephys__ (Electrophysiology data combined with the subsequent data analysis)
 
