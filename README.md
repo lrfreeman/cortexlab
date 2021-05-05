@@ -43,3 +43,9 @@ Where S(t) is spikes at time t. Before creating this model I checked that the co
 <p align="center">
   <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117127602-31f77c80-ad94-11eb-9901-83dd6ba75ead.png">
 </p>
+
+The above correlation coefficient matrix shows that reward times and lick times are loosely correlated. Which is to be expected given a mouse should lick after reward has been delivered. However, the correlation is not strong and therefore Kernel Regression should aid our ability to decode neural firing properties between these events. Below is the output of such decoding:
+
+<p align="center">
+  <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117128077-d974af00-ad94-11eb-8b8f-bc2d5baeb655.png">
+</p>
