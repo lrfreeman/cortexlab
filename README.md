@@ -2,12 +2,9 @@
 
 This github repo is a collection of projects undertaken whilst studying neuroscience at the CortexLab at UCL with Matteo Carandini and Kenneth Harris (https://www.ucl.ac.uk/cortexlab/). My work is a collaboration with my supervisor Kevin Miller, a post-doc at UCL and a research scientist at Google DeepMind (https://deepmind.com/).
 
-My research explores the temporal credit assignment problem in the field of reinforcement learning. As rewards can occur in a temporally delayed fashion, this causes the problem of determining the actions that lead to a certain outcome (Minsky, 1961; https://courses.csail.mit.edu/6.803/pdf/steps.pdf)
+My research explores the temporal credit assignment problem in the field of reinforcement learning. As rewards can occur in a temporally delayed fashion, this causes the problem of determining the actions that lead to a certain outcome (Minsky, 1961; https://courses.csail.mit.edu/6.803/pdf/steps.pdf). By exploring the underlying neural activity of a biological agent during a two-armed bandit task, we hope to using signal processing techniques to isolate the computations of reward assignment. Ultimately, my goal is to explore how neurobiology can inform modern day machine learning algorithms.
 
-
-Our project explores the neural correlates of reward during a learning task in mice with the hope we can isolate computations of reward assignment. Ultimately, seeking how neurobiology can inform modern day machine learning algorithms currently used at Google.
-
-The project is split into multiple components: __DeepLabCut__ (An open source deep learning computer vision library) and __Ephys__ (Electrophysiology data combined with the subsequent data analysis)
+The project is split into multiple components: __deepLabCut__ (An open source deep learning computer vision library I've added to in order to classify tongue kinematics for the purpose of removing signal artefacts during electrophysiological analysis), __Ephys__ (a set of scripts converting neural data into a python arrays) and finally, __computational_models__ a mix of Q-Learning algorithms and regression models (for the purposes of signal processing and cognitive behavioural modelling).
 
 ## DeepLabCut (DLC)
 DeepLabCut is an open source deep learning computer vision package which uses transfer learning from pre-trained neural networks to optimise the training time of your novel prediction task (https://www.nature.com/articles/s41593-018-0209-y). After I manually classified 100's of frames of videos, the resulting DLC model can now predict licking kinematics. This allows us to decide when a mouse is licking during a given trial. Important, so that we can remove licking artefacts from the neural ephys in order to focus on the genuine neural correlates of reward.
