@@ -13,7 +13,7 @@ All of the data below is based on electrophysiological recordings from Neuropixe
 </p>
 
 ## Task explanation
-During the task a mouse can receive four reward permutations (A cherry reward, a grape reward, both rewards at the same time and no rewards). The mouse is head fixed, and can make two choices on a steering wheel. Given the correct choice, a reward is delivered via a spout to the mouse. One of the reward's is random (Grape - a "distractor" reward) whereas another reward is released on a successful trial (Cherry). Thus neurally, we hypothesis that the mouse should care more about cherry than grape, that this preference will be represented neurally, and that these signals can be analysed to understand the neurobiological underpinnings of credit assignment.
+During the task a mouse can receive four reward permutations (A cherry reward, a grape reward, both rewards at the same time and no rewards). The mouse is head fixed, and can make two choices on a steering wheel. Given the correct choice, a reward is delivered via a spout to the mouse. One of the rewards is random (Grape - a "distractor" reward) whereas another reward is released on a successful trial (Cherry). Thus neurally, we hypothesis that the mouse should care more about cherry than grape, that this preference will be represented neurally, and that these signals can be analysed to understand the neurobiological underpinnings of credit assignment.
 
 <p align="center">
   <img width="346" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117124811-ae885c00-ad90-11eb-8493-5de16a0fa3a2.png">
