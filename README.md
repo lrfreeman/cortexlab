@@ -1,8 +1,8 @@
 # Cortexlab Repo
 
-This github repo is a collection of projects undertaken whilst studying neuroscience at the CortexLab at UCL (https://www.ucl.ac.uk/cortexlab/) with Matteo Carandini and Kenneth Harris. My work is a collaboration with my supervisor Kevin Miller, a post-doc at UCL and a research scientist at Google DeepMind (https://deepmind.com/).
+This github repo is a collection of projects undertaken whilst studying neuroscience at the CortexLab at UCL with Matteo Carandini and Kenneth Harris (https://www.ucl.ac.uk/cortexlab/). My work is a collaboration with my supervisor Kevin Miller, a post-doc at UCL and a research scientist at Google DeepMind (https://deepmind.com/).
 
-The focus of my research is on solving the temporal credit assignment problem in the field of reinforcement learning. Rewards can occur in a temporally delayed fashion. This causes the problem of determining the actions that lead to a certain outcome (Minsky, 1961; https://courses.csail.mit.edu/6.803/pdf/steps.pdf)
+My research explores the temporal credit assignment problem in the field of reinforcement learning. As rewards can occur in a temporally delayed fashion, this causes the problem of determining the actions that lead to a certain outcome (Minsky, 1961; https://courses.csail.mit.edu/6.803/pdf/steps.pdf)
 
 
 Our project explores the neural correlates of reward during a learning task in mice with the hope we can isolate computations of reward assignment. Ultimately, seeking how neurobiology can inform modern day machine learning algorithms currently used at Google.
