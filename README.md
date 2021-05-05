@@ -5,7 +5,7 @@ This github repo is a collection of projects undertaken whilst studying neurosci
 My work is a collaboration with my supervisor Kevin Miller, a post-doc at UCL and a research scientist at Google DeepMind.
 
 <p align="right">
-  <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117119809-75e58400-ad8a-11eb-88ab-ff77613b696a.png">
+  <img width="500" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117119809-75e58400-ad8a-11eb-88ab-ff77613b696a.png">
 </p>
 
 
