@@ -16,7 +16,7 @@ All of the data below is based on electrophysiological recordings from Neuropixe
 During the task a mouse can receive four reward permutations (A cherry reward, a grape reward, both rewards at the same time and no rewards). The mouse is head fixed, and can make two choices on a steering wheel. Given the correct choice, a reward is delivered via a spout to the mouse.
 
 <p align="center">
-  <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117124221-f955a400-ad8f-11eb-9225-d6c4004095fe.gif">
+  <img width="1398" img height="750" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117124221-f955a400-ad8f-11eb-9225-d6c4004095fe.gif">
 </p>
 
 ## Signal Processing
