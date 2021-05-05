@@ -12,6 +12,13 @@ All of the data below is based on electrophysiological recordings from Neuropixe
   <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117122762-20ab7180-ad8e-11eb-8037-703933ab3394.png">
 </p>
 
+## Task explanation
+During the task a mouse can receive four reward permutations (A cherry reward, a grape reward, both rewards at the same time and no rewards). The mouse is head fixed, and can make two choices on a steering wheel. Given the correct choice, a reward is delivered via a spout to the mouse.
+
+<p align="center">
+  <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117124221-f955a400-ad8f-11eb-9225-d6c4004095fe.gif">
+</p>
+
 ## Signal Processing
 Given that our biological agent licks to receive a reward on completion of a successful trial during a two-armed bandit task a signal processing problem is presented. Specifically, an inability of decoding whether a neuron is responding to a given reward or whether a neuron is firing as a result of tongue movements.
 
