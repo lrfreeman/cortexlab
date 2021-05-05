@@ -9,7 +9,7 @@ The project is split into multiple components: __deepLabCut__ (An open source de
 All of the data below is based on electrophysiological recordings from Neuropixels (https://www.ucl.ac.uk/neuropixels/), 1000 count probes. Combined with behavioural data from rodents conducting a two-armed bandit task.
 
 <p align="center">
-  <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="![Screenshot 2021-05-05 at 10 39 06](https://user-images.githubusercontent.com/22481774/117122762-20ab7180-ad8e-11eb-8037-703933ab3394.png)">
+  <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117122762-20ab7180-ad8e-11eb-8037-703933ab3394.png">
 </p>
 
 ## Signal Processing
