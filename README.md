@@ -19,8 +19,8 @@ During the task a mouse can receive four reward permutations (A cherry reward, a
   <img width="346" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117124811-ae885c00-ad90-11eb-8493-5de16a0fa3a2.png">
 </p>
 
-## Signal Processing
-Given that our biological agent licks to receive a reward on completion of a successful trial, a signal processing problem is presented. Specifically, an inability of decoding whether a neuron is responding to a given reward or whether a neuron is firing as a result of tongue movements. By looking at the below peri-stimulus time histogram and a spike-raster that I've generated, it would appear that our hypothesis is correct. There are specific cells that respond different to reward permutations.
+## Signal Processing - Basic
+Given that our biological agent licks to receive a reward on completion of a successful trial, a signal processing problem is presented. Specifically, an inability of decoding whether a neuron is responding to a given reward or whether a neuron is firing as a result of tongue movements. By looking at the below peri-stimulus time histogram and a spike-raster that I've generated, the visualisations show that specific cells may respond differently to different reward permutations.
 
 <p align="center">
   <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117123421-e55d7280-ad8e-11eb-823e-eac3463194f0.png">
@@ -29,6 +29,11 @@ Given that our biological agent licks to receive a reward on completion of a suc
 However, how do we know that these signals are not artefacts of licking? Perhaps the mouse really likes licking. Or licks more during a cherry reward than a grape reward. Which begs the question, how can we decode whether a neuron is firing because a reward touched the tongue, or because the tongue has moved out of the mouth?
 
 ## DeepLabCut (DLC)
-DeepLabCut is an open source deep learning computer vision package which uses transfer learning from pre-trained neural networks to optimise the training time of your novel prediction task (https://www.nature.com/articles/s41593-018-0209-y). After I manually classified 100's of frames of videos, the resulting DLC model can now predict licking kinematics. This allows us to decide when a mouse is licking during a given trial. Important, so that we can remove licking artefacts from the neural data in order to focus on the genuine neural correlates of reward.
+In order to prevent introducing further electrical artefacts via an electrical tongue measuring device, a computer vision approach was selected to measure tongue kinematics. For this I used DeepLabCut, an open source deep learning computer vision package which uses transfer learning from pre-trained neural networks to optimise the training time of your novel prediction task (https://www.nature.com/articles/s41593-018-0209-y). I placed a server on AWS running DLC on a GPU instance for speed and wrote a python application to predict when and where the mouse is licking. The ultimate output of this project was a list of licking times for each behavioural session.
 
-The ultimate outcome of creating this library was to create a signal processing technique to
+## Signal Processing - More advanced
+A kernel regression model was used to analyse different events (Licking vs reward times) to understand which event had the greatest affect on spike count. Specifically, I implemented the below model from Parker et al,. (2016):
+
+<p align="center">
+  <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117127251-c2818d00-ad93-11eb-8102-db09b03573ea.png">
+</p>
