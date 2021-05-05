@@ -37,3 +37,9 @@ A kernel regression model was used to analyse different events (Licking vs rewar
 <p align="center">
   <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117127251-c2818d00-ad93-11eb-8102-db09b03573ea.png">
 </p>
+
+Where S(t) is spikes at time t. Before creating this model I checked that the covariance between each event was weak to ensure the model will work.
+
+<p align="center">
+  <img width="1398" alt="Screenshot 2020-12-03 at 11 02 18" src="https://user-images.githubusercontent.com/22481774/117127602-31f77c80-ad94-11eb-9901-83dd6ba75ead.png">
+</p>
