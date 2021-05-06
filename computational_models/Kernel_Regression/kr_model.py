@@ -1,4 +1,3 @@
-#Import libaries
 import KR_classes as KR
 import numpy as np
 import pandas as pd
@@ -19,50 +18,41 @@ reward_times = np.asarray(trial_df["reward_times"])
 trial_start_times = np.asarray(trial_df["trial_start_times"])
 spike_times = np.load("/Users/laurence/Desktop/spike_times.npy")
 spike_clusters = np.load("/Users/laurence/Desktop/spike_clusters.npy")
-
-#Need to introduce licking function into class
-# first_lick_df, df, lick_df = data.produce_1st_lick()
-# first_lick_times = np.asarray(first_lick_df["First Lick Times"])
+first_lick_df = data.compute_the_first_lick()
+first_lick_times = np.asarray(first_lick_df["First Lick Times"])
 
 """Free Parameters"""
-time_bin = 0.2 # time bin size for data in seconds
+time_bin = 0.1 # time bin size for data in seconds
 sampling_rate = 30000 # sampling rate of probe in Hz
 cell_ID = 0 #Define the unit to filter spike times on
-synthetic_trial_number = 500
-
-#Defines how big kernels should be - must be intergers
-shift_back = 15 #1.5seconds as bin count is set to 0.1 above
-# shift_back = 5 #0.5seconds as bin count is set to 0.1 above
-# shift_forward = 15 #1.5seconds as bin count is set to 0.1 above
-shift_forward = 30 #3seconds as bin count is set to 0.1 above
+synthetic_trial_number = 100000
+shift_back = 15 #15 would be 1.5 seconds if bin count is set to 0.1 above - How far should the kernel look back?
+shift_forward = 30 #30 would be 3 seconds if bin count is set to 0.1 above - How far should the kernel look forwards?
 shift_total = shift_back + shift_forward
 kernal_window_range = np.arange(-shift_back,shift_forward,1).tolist()
 
 """Configure data"""
-spike_times = spike_times / sampling_rate # (assumed sampling rate of 30000 Hz?)
+spike_times = spike_times / sampling_rate # (assumed sampling rate of 30000 Hz?) - Used only for real data
 bins = data.bin_the_session(time_bin)
 end_time = np.max(spike_times) + 10  # End-point in seconds of the time period you're interested in
 
 """Create synethic reward times"""
 reward_times = np.random.default_rng().uniform(0, end_time, synthetic_trial_number)
 
-# print("Synthetic reward times", reward_times)
-
 """Create synethic lick times"""
 #Create lick times distributed across reward times
 #Add one second so as to always be after reward
-# first_lick_times = [np.random.default_rng().normal(loc = time, scale = 0.2) + 1 for time in reward_times]
+# first_lick_times = [np.random.default_rng().normal(loc = time, scale = 0.2) + 2 for time in reward_times]
 
-#Create lick times randomly
+# #Create lick times randomly
 first_lick_times = np.random.default_rng().uniform(0, end_time, synthetic_trial_number)
-
-# print("Synthetic lick times", first_lick_times)
 
 """Outline the kernels"""
 kernels = [reward_times, first_lick_times] # Each item should be an event kernel
+# kernels = [reward_times] # Each item should be an event kernel
 
 """Create synethic spike times for X"""
-length = 100000 #Create an artificial number of spikes
+length = 2000000 #Create an artificial number of spikes
 spike_clusters = np.asarray(np.random.randint(2, size=(length,1))) #Create a vector of 0's and 1's / 2x units
 
 #The below code makes a list of lists for spike times such as: [[23s], [34s], [35s]] over a mean of reward time
@@ -131,15 +121,16 @@ design_matrix_lick = create_design_matrix(first_lick_times)
 design_matrix = pd.concat([design_matrix_reward, design_matrix_lick], axis=1)
 
 """Calculate coefficient matrix"""
-R1 = np.corrcoef(design_matrix_reward, design_matrix_lick, rowvar=False)
-sns.heatmap(R1, cmap = "GnBu", yticklabels=False, xticklabels=False)
-plt.title("Correlation coefficient matrix measuring covariance between regressors")
-plt.show()
+# R1 = np.corrcoef(design_matrix_reward, design_matrix_lick, rowvar=False)
+# sns.heatmap(R1, cmap = "GnBu", yticklabels=False, xticklabels=False)
+# plt.title("Correlation coefficient matrix")
+# plt.show()
 
 """Set up design matrix to run within sm.GLM"""
 X = sm.add_constant(design_matrix, prepend=False)
+# X = sm.add_constant(design_matrix_reward, prepend=False)
 
-"""Calculate the delta between x and Y caused by differing kernel size"""
+"""Calculate the delta between x and Y caused by kernel size not dividing bin length perfectly"""
 delta = Y.shape[0] - X.shape[0]
 
 """Code to run sm.GLM"""
@@ -155,7 +146,7 @@ bin_centres = 0.5*(kernal_window_range[1:] + kernal_window_range[:-1]) / 10 # to
 """""Plotting logic"""
 plt.figure()
 plt.plot(bin_centres, weights[:(shift_total - 1)], label = 'Reward Kernel') # cut last weight off ddue to use of bin centres
-# plt.plot(bin_centres, weights[shift_total - 1: -1], label = 'First Lick Kernel') # cut constant and last weighht off
+plt.plot(bin_centres, weights[shift_total - 1: -1], label = 'First Lick Kernel') # cut constant and last weighht off
 plt.xlabel("Kernel Window (seconds)", fontsize = 12)
 plt.ylabel("Coefficients", fontsize = 12)
 # plt.title("Kernel Regression: cluster ID {} ".format(cell_ID), fontsize = 12)

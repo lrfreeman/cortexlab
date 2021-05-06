@@ -1,11 +1,14 @@
 import sys
 
 #Ensure the KR class is in the python path
-sys.path.insert(1,'/Users/laurence/Desktop/Neuroscience/kevin_projects/code/mousetask/electrophysiology')
+sys.path.insert(1,'/Users/laurence/Desktop/Neuroscience/kevin_projects/code/mousetask')
+sys.path.insert(1,'/Users/laurence/Desktop/Neuroscience/kevin_projects/code/mousetask/deepLabCut')
 
-import ingest_timesync as ingest
+import electrophysiology.ingest_timesync as ingest
 import pandas as pd
 import numpy as np
+import is_licking as lick
+
 
 class ProcessData:
 
@@ -31,3 +34,11 @@ class ProcessData:
     def bin_the_session(self, time_bin):
         bins = np.arange(0,np.max(self.spike_times),time_bin).tolist()
         return(bins)
+
+    """Generate first lick data frame"""
+    def compute_the_first_lick(self):
+        frame_times = ingest.import_frame_times(self.frame_alignment_data)
+        df = lick.generate_licking_times(frame_times, self.dlc_video_csv)
+        lick_df = lick.map_lick_to_trial_type(df,self.session_data)
+        first_lick_df = lick.compute_1st_lick(lick_df)
+        return(first_lick_df)
