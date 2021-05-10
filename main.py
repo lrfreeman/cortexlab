@@ -1,4 +1,4 @@
-import PredictLicking.is_licking as lick
+import deepLabCut.is_licking as lick
 import matplotlib.backends.backend_pdf
 import electrophysiology.ingest_timesync as ingest
 from matplotlib.ticker import MaxNLocator
@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import time
-import DLC_Classes as CL
+import deepLabCut.DLC_Classes as CL
 from functools import partial
 import holoviews as hv
 import holoviews.operation.datashader as hd

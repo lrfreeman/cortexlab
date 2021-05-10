@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from scipy import interpolate
 import random
 import seaborn as sns
+import sys
 
 """Load data"""
 data = KR.ProcessData(session_data = '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/processed_physdata/aligned_physdata_KM011_2020-03-23_probe1.mat',
@@ -25,141 +26,144 @@ first_lick_times = np.asarray(first_lick_df["First Lick Times"])
 time_bin = 0.1 # time bin size for data in seconds
 sampling_rate = 30000 # sampling rate of probe in Hz
 cell_ID = 0 #Define the unit to filter spike times on
-synthetic_trial_number = 500
+synthetic_trial_number = 800
+length = 100000 #Create an artificial number of spikes of lenght....
 shift_back = 15 #15 would be 1.5 seconds if bin count is set to 0.1 above - How far should the kernel look back?
 shift_forward = 30 #30 would be 3 seconds if bin count is set to 0.1 above - How far should the kernel look forwards?
 shift_total = shift_back + shift_forward
-kernal_window_range = np.arange(-shift_back,shift_forward,1).tolist()
+kernel_window_range = np.arange(-shift_back,shift_forward,1).tolist()
+range_back = np.sort(np.arange(1,shift_back, 1))[::-1]
+range_forward = np.arange(1,shift_forward + 1, 1)
 
 """Configure data"""
 spike_times = spike_times / sampling_rate # (assumed sampling rate of 30000 Hz?) - Used only for real data
-bins = data.bin_the_session(time_bin)
-end_time = np.max(spike_times) + 10  # End-point in seconds of the time period you're interested in
+end_time = np.max(spike_times) + 5  # End-point in seconds of the time period you're interested in
+bins = data.bin_the_session(time_bin, end_time)
 
-"""Create synethic reward times"""
-reward_times = np.random.default_rng().uniform(0, end_time, synthetic_trial_number)
-
-"""Create synethic lick times"""
-#Create lick times distributed across reward times
-#Add one second so as to always be after reward
-# first_lick_times = [np.random.default_rng().normal(loc = time, scale = 0.2) + 2 for time in reward_times]
-
-# #Create lick times randomly
-first_lick_times = np.random.default_rng().uniform(0, end_time, synthetic_trial_number)
-
-"""Outline the kernels"""
-kernels = [reward_times, first_lick_times] # Each item should be an event kernel
-# kernels = [reward_times] # Each item should be an event kernel
+"""Instantiate synthic class and generated synethic data"""
+synth_data =       KR.Generate_Synth_Data(end_time, synthetic_trial_number, length)
+reward_times   =   synth_data.generate_event_times() #Generate event times uniformly across the session
+# first_lick_times = synth_data.generate_event_times() #Use this line to make uncouple lick times from reward
+first_lick_times = [np.random.default_rng().normal(loc = time, scale = 0.1 ) for time in reward_times] #Create lick times distributed across reward times
+spike_clusters =   synth_data.generate_unit() #Generate an array of 0's length of spikes
 
 """Create synethic spike times for X"""
-length = 10000 #Create an artificial number of spikes of lenght....
-# spike_clusters = np.asarray(np.random.randint(2, size=(length,1))) #Create a vector of 0's and 1's / 2x units
-spike_clusters = np.asarray(np.random.randint(1, size=(length,1))) #Create a vector of 0's
-
-#The below code makes a list of lists for spike times such as: [[23s], [34s], [35s]] over a mean of reward time
+# #The below code makes a list of lists for spike times such as: [[23s], [34s], [35s]] over a mean of reward time
 x = 0 # Create a counter
 spike_times = []
 while x < length: #Loop until spikes = lenght
     for time in reward_times:
         y = []
-        y.insert(0, np.random.default_rng().normal(loc = time, scale = 0.1)) #Create a spike with time as the mean
+        y.insert(0, np.random.default_rng().normal(loc = time, scale = 0.2)) #Create a spike with time as the mean
         spike_times.insert(x, y) #Here, 2nd arg is inserted to the list at the 1st arg index using the counter
         x += 1
-
 spike_times = np.asarray(spike_times)
 spike_times = spike_times[:length]
 
-"""Create the Y output"""
+"""_Create the Y output_"""
 spike_data = pd.DataFrame(spike_times, columns = ["spike_times"])
 spike_data['cluster_ids'] = spike_clusters
 
-def histogram(spike_df, cell_ID):
+def produce_multiple_charts(cell_ID):
+    """_Analyze the  data_"""
+    analysis_object = KR.Analyze_data(cell_ID,
+                                      spike_data,
+                                      range_back,
+                                      range_forward,
+                                      shift_back,
+                                      shift_total)
 
-    spike_df = spike_df.loc[(spike_df["cluster_ids"] == cell_ID)]
+    """_Calculate the number of spikes in each bin to produce the dependent Y variable for the regression_"""
+    Y = analysis_object.histogram(bins, end_time) # Spike counts assigned to each bin
+    Y = Y[shift_total:-shift_total] # truncate spike signal to fit x-mat - #Check with Kevin
 
-    #Logic for fast histogram
-    session_counts = fast_histogram.histogram1d(spike_df["spike_times"], bins=len(bins), range=(0,end_time))
-    session_counts = pd.DataFrame(session_counts)
-    session_counts = session_counts.rename(columns={0: "spike_counts"})
+    """_Create design matrix_"""
+    def new_design_matrix(kernel):
 
-    return(session_counts)
+            map_event_to_bin = np.digitize(kernel, bins) #Return the indices of the bins to which each value in input array belongs.
+            bin_vector = np.zeros((len(bins), 1)) #Creates a vector of zeros of lenghh bin
 
-"""Define  Y""" # Spike counts assigned to each bin
+            #Iterate through binned event indexes and assign that bin a value of 1 to represent the event
+            for x in map_event_to_bin:
+                bin_vector[x - 1] = 1  #Creates a vector of 1's and 0's where 1's refers to the event time index of a bin
 
-Y = np.asarray(histogram(spike_data, cell_ID))
+            shifted_vector = bin_vector[shift_total - 15: -15 - shift_total] # new - second  segment should be shif back -1 so -15 - 1 = -16
+            design_matrix = pd.DataFrame(shifted_vector, columns = ["-15"]) #Creates a dataframe of a shifted event vector with column header 0
 
-#truncate spike signal to fit x-mat
-Y = Y[(shift_forward+1):-shift_back + 1]
+            for i in range_back:
+                shifted_vector = bin_vector[shift_total - i: -i - shift_total]
+                design_matrix["-" + str(i)] = shifted_vector #Adds to the dataframe for the size of the kernel window, each column is a param
 
-"""Plot spike distribution for checking synethic data"""
-# plt.figure()
-# plt.plot(bins, Y)
-# plt.title("Histogram of synethic spikes")
-# plt.show()
+            shifted_vector = bin_vector[shift_total:-shift_total]
+            design_matrix["0"] = shifted_vector
 
-"""Create design matrix"""
+            for i in range_forward:
+                shifted_vector = bin_vector[i + shift_total : - shift_total + i]
+                design_matrix[str(i)] = shifted_vector #Adds to the dataframe for the size of the kernel window, each column is a param
 
-def create_design_matrix(kernel):
+            return (design_matrix)
 
-        map_event_to_bin = np.digitize(kernel, bins) #Return the indices of the bins to which each value in input array belongs.
-        bin_vector = np.zeros((len(bins), 1)) #Creates a vector of zeros of lenghh bin
+    #My design matrix
+    design_matrix_reward_new = new_design_matrix(reward_times)
+    design_matrix_lick_new =  new_design_matrix(first_lick_times)
+    design_matrix = pd.concat([design_matrix_reward_new, design_matrix_lick_new], axis=1)
 
-        #Iterate through binned event indexes and assign that bin a value of 1 to represent the event
-        for x in map_event_to_bin:
-            bin_vector[x] = 1  #Creates a vector of 1's and 0's where 1's refers to the event time index of a bin
+    """Calculate coefficient matrix"""
+    # R1 = np.corrcoef(design_matrix_reward_new, design_matrix_lick_new, rowvar=False)
+    # sns.heatmap(R1, cmap = "GnBu", yticklabels=False, xticklabels=False)
+    # plt.title("Correlation coefficient matrix")
+    # plt.show()
 
-        i = 1 #start the index at 1 as to not break the looping logic
-        shifted_vector = bin_vector[shift_back + shift_forward + 1 - i:]
-        design_matrix = pd.DataFrame(shifted_vector) #Creates a dataframe of a shifted event vector with column header 0
+    """Set up design matrix to run within sm.GLM"""
+    X = sm.add_constant(design_matrix, prepend=False) #prepend=False means a column of ones has been appended to the end for the constant
 
-        #Create an iterator for the below loop starting at 2 considering the first index was used above to create the df
-        kernel_window_len_interator = np.arange(2,shift_total,1)
+    """Code to run sm.GLM"""
+    model = sm.GLM(Y, X, family = sm.families.Gaussian()).fit()
+    summary_of_model = model.summary()
+    weights = model.params
+    weights = np.asarray(weights) #Constant is at the endd of the vector
 
-        for i in kernel_window_len_interator: #Starting at 2 because the first bin is used in the skeleton dataframe
-            shifted_vector = bin_vector[shift_back + shift_forward + 1 - i:-i + 1]
-            design_matrix[str(i - 1)] = shifted_vector #Adds to the dataframe for the size of the kernel window, each column is a param
+    """Prediction code"""
+    # predicted_x = model.predict()
+    # print("Length of predicted_x", len(predicted_x))
+    # print("Lenght of truncated Y", len(Y))
+    # print("Length of trucated bins", len(bins[(shift_forward+1):-shift_back + 1]))
+    # plt.figure()
+    # plt.plot(bins[(shift_forward+1):-shift_back + 1], Y)
+    # plt.plot(bins[(shift_forward+1):-shift_back + 1], predicted_x)
+    # plt.title("Prediction vs reality")
+    # plt.show()
 
-        return (design_matrix)
+    """Change x axis to bin centers"""
+    # kernel_window_range = np.asarray(kernel_window_range) / 10 # to convert into seconds
+    # print("print kernel window range", len(kernel_window_range))
+    # bin_centres = 0.5*(kernal_window_range[1:] + kernal_window_range[:-1]) / 10 # to convert into seconds
 
-design_matrix = create_design_matrix(reward_times)
-# design_matrix_reward = create_design_matrix(reward_times)
-# design_matrix_lick = create_design_matrix(first_lick_times)
-# design_matrix = pd.concat([design_matrix_reward, design_matrix_lick], axis=1)
+    """""Plotting logic"""
+    plt.figure()
+    plt.plot(kernel_window_range, weights[:shift_total], label = 'Reward Kernel')
+    plt.plot(kernel_window_range, weights[shift_total + 1:-2], label = 'Lick Kernel') # Cut last weight off as it's the y intercept
+    plt.xlabel("Kernel Window (seconds)", fontsize = 12)
+    plt.ylabel("Coefficients", fontsize = 12)
+    plt.title("Kernel Regression: cluster ID {} ".format(cell_ID), fontsize = 12)
+    plt.legend()
+    plt.axvline(x=0, color = "r", linewidth=0.9)
+    plt.axhline(y=0, color = "k", linewidth=0.9)
+    plt.show()
 
-"""Calculate coefficient matrix"""
-# R1 = np.corrcoef(design_matrix_reward, design_matrix_lick, rowvar=False)
-# sns.heatmap(R1, cmap = "GnBu", yticklabels=False, xticklabels=False)
-# plt.title("Correlation coefficient matrix")
-# plt.show()
+#Product just one chart
+produce_multiple_charts(cell_ID)
 
-"""Set up design matrix to run within sm.GLM"""
-X = sm.add_constant(design_matrix, prepend=False)
-# X = sm.add_constant(design_matrix_reward, prepend=False)
-
-# """Calculate the delta between x and Y caused by kernel size not dividing bin length perfectly"""
-# delta = Y.shape[0] - X.shape[0]
-
-"""Code to run sm.GLM"""
-model = sm.GLM(Y, X, family = sm.families.Gaussian()).fit() #Remove the first 46 elements of Y to match the shape of the design matrix
-summary_of_model = model.summary()
-weights = model.params
-weights = np.asarray(weights) #Constant is at the endd of the vector
-
-"""Change x axis to bin centers"""
-kernal_window_range = np.asarray(kernal_window_range)
-bin_centres = 0.5*(kernal_window_range[1:] + kernal_window_range[:-1]) / 10 # to convert into seconds
-
-"""""Plotting logic"""
-plt.figure()
-plt.plot(bin_centres, weights[:(shift_total - 1)], label = 'Reward Kernel') # cut last weight off ddue to use of bin centres
-# plt.plot(bin_centres, weights[shift_total - 1: -1], label = 'First Lick Kernel') # cut constant and last weighht off
-plt.xlabel("Kernel Window (seconds)", fontsize = 12)
-plt.ylabel("Coefficients", fontsize = 12)
-# plt.title("Kernel Regression: cluster ID {} ".format(cell_ID), fontsize = 12)
-plt.legend()
-plt.axvline(x=0, color = "r", linewidth=0.9)
-plt.axhline(y=0, color = "k", linewidth=0.9)
-plt.show()
+# for x in range(100):
+#     if x == 11:
+#         continue
+#     if x == 21:
+#         continue
+#     if x == 38:
+#         continue
+#     if x == 91:
+#         continue
+#     produce_multiple_charts(x)
 
 """Print important data points"""
 print("")
@@ -169,6 +173,3 @@ print("Lenght of Y", len(Y))
 print("Lenght of Weights", len(weights))
 # print("Correlation coefficient matrix", R1)
 print("")
-
-#Tests
-# assert design_matrix.shape == (len(bins), shift_total), "Design Matrix is an incorrect shape"
