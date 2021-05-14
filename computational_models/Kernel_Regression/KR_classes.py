@@ -21,8 +21,8 @@ class ProcessData:
     def load_data(self, session_data):
         trial_df, spike_times, cluster_IDs, cluster_types = ingest.convert_mat(session_data)
         trial_df = trial_df.drop(columns=["nTrials"])
-        spike_dic = {"Spike_Times": [spike_times], "cluster_ids": [cluster_types]}
-        spike_df =  pd.DataFrame(spike_dic)
+        spike_df = pd.DataFrame(spike_times, columns =["Spike_times"])
+        spike_df["cluster_ids"] = cluster_IDs
         return(trial_df,spike_df)
 
     def bin_the_session(self, time_bin, end_point):
@@ -55,6 +55,23 @@ class Generate_Synth_Data:
     def generate_unit(self):
         return(np.asarray(np.random.randint(1, size=(self.num_of_artificial_spikes,1))))
 
+    def generate_spikes(self, event_center):
+
+        """Create synethic spike times for the X variable"""
+        # #The below code makes a list of lists for spike times such as: [[23s], [34s], [35s]] over a mean of reward time
+        x = 0 # Create a counter
+        spike_times = []
+        while x < self.num_of_artificial_spikes: #Loop until spikes = lenght
+            for time in event_center:
+                y = []
+                y.insert(0, np.random.default_rng().normal(loc = time, scale = 0.2)) #Create a spike with time as the mean
+                spike_times.insert(x, y) #Here, 2nd arg is inserted to the list at the 1st arg index using the counter
+                x += 1
+        spike_times = np.asarray(spike_times)
+        spike_times = spike_times[:self.num_of_artificial_spikes]
+
+        return(spike_times)
+
 class Analyze_data:
     def __init__(self,
                  Cell_ID,
@@ -62,13 +79,15 @@ class Analyze_data:
                  range_back,
                  range_forward,
                  shift_back,
-                 shift_total):
+                 shift_total,
+                 trial_df):
         self.cell_id = Cell_ID
         self.spike_df = spike_df
         self.shift_back = shift_back
         self.range_back = range_back
         self.range_forward = range_forward
         self.shift_total = shift_total
+        self.trial_df = trial_df
 
     def histogram(self, bins, end_time):
         spike_df = self.spike_df.loc[(self.spike_df["cluster_ids"] == self.cell_id)]
