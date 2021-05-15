@@ -1,8 +1,8 @@
 import sys
 
 # #Ensure the KR class is in the python path
-sys.path.insert(1,'/Users/laurence/Desktop/Neuroscience/kevin_projects/code/mousetask')
-sys.path.insert(1,'/Users/laurence/Desktop/Neuroscience/kevin_projects/code/mousetask/deepLabCut')
+sys.path.insert(1,'/Users/laurencefreeman/Documents/cortexlab')
+sys.path.insert(1,'/Users/laurencefreeman/Documents/cortexlab/deepLabCut')
 
 import electrophysiology.ingest_timesync as ingest
 import pandas as pd
