@@ -8,13 +8,12 @@ import pandas as pd
 import time
 import deepLabCut.DLC_Classes as CL
 from functools import partial
-import holoviews as hv
 import holoviews.operation.datashader as hd
 import datashader as ds
 from datashader.mpl_ext import dsshow
 import datashader.transfer_functions as tf
 import panel as pn
-# from holoviews.plotting import maplotlib
+from computational_models.Kernel_Regression import kr_model as KR
 
 #Extend data print rows
 # pd.set_option("display.max_rows", None, "display.max_columns", None)
@@ -26,9 +25,9 @@ start_time = time.time()
 
 """-----------------Load some data-------------------------------"""
 
-data = CL.CortexLab('/Users/laurence/Desktop/Neuroscience/kevin_projects/data/processed_physdata/aligned_physdata_KM011_2020-03-23_probe1.mat',
-                    '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/KM011_video_timestamps/2020-03-23/face_timeStamps.mat',
-                    '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/23_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv')
+data = CL.CortexLab('/Users/laurencefreeman/Documents/thesis_data/processed_physdata/aligned_physdata_KM011_2020-03-23_probe1.mat',
+                    '/Users/laurencefreeman/Documents/thesis_data/KM011_video_timestamps/2020-03-23/face_timeStamps.mat',
+                    '/Users/laurencefreeman/Documents/thesis_data/23_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv')
 
 trial_df, spike_df = data.load_data(data.session_data)
 
@@ -61,9 +60,15 @@ def split_by_cell(cell_ID):
     no_reward_count = pd.DataFrame(no_reward_spike_counts).sum(axis=0)
     no_reward_hertz = (no_reward_count / len(no_reward_spike_counts)) * 5
 
+    #add kernel regression_
+
+    weights, kernel_window_range, shift_total = KR.multi_graph(cell_ID)
+    kernel_window_range = np.asarray(kernel_window_range) / 10 # to convert into seconds
+
+
     #--------------------------------------------------------------------------
     #Outline subplots
-    fig, (ax1) = plt.subplots(1, sharex=True)
+    fig, (ax1, ax2) = plt.subplots(2, sharex=True)
 
     # #Plot PSTH
     ax1.plot(bin_centres,cherry_hertz[:-1], color='r', label="Cherry Reward")
@@ -72,6 +77,14 @@ def split_by_cell(cell_ID):
     ax1.plot(bin_centres,no_reward_hertz[:-1], color='k', label="No Reward"    )
     ax1.legend(loc='upper right')
     ax1.set(title="PSTH - Locked to reward - Cell:{}".format(cell_ID), ylabel="Firing Rates (sp/s)")
+
+    ax2.plot(kernel_window_range, weights[:shift_total], label = 'Reward Kernel')
+    ax2.plot(kernel_window_range, weights[shift_total + 1:-2], label = 'Lick Kernel') # Cut last weight off as it's the y intercept
+    ax2.set(title="Kernel Regression", ylabel="Coefficients")
+    ax2.legend(loc='upper right')
+
+    print(cell_ID)
+
     # plt.show()
     return(fig)
 
@@ -79,8 +92,8 @@ def split_by_cell(cell_ID):
 
 # Multiple viz gen
 pdf = matplotlib.backends.backend_pdf.PdfPages("output.pdf")
-for x in range(data.numofcells):
-# for x in range(2):
+# for x in range(data.numofcells):
+for x in range(50):
     fig = split_by_cell(x)
     pdf.savefig(fig)
     plt.close(fig)
