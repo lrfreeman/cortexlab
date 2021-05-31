@@ -65,23 +65,31 @@ def produce_multi_charts_scatter(cell_id):
     results = pd.DataFrame(lick_counts, columns = ["lick_counts"])
     results["spike_counts"] = spike_counts
 
+    """Filter for reward"""
+    results = pd.concat([results, trial_df["left_rewards"], trial_df["right_rewards"]], axis=1)
+    results["reward"] = np.where((results["left_rewards"] == 1) | (results["right_rewards"] == 1), 1, 0)
+    results_reward = results.loc[results["reward"] == 1]
+    results_no_reward = results.loc[results["reward"] == 0]
+
     """-------------------Create viz-------------------------------------"""
+    y_reward = results_reward["spike_counts"]
+    x_reward = results_reward["lick_counts"]
+
+    y_no_reward = results_no_reward["spike_counts"]
+    x_no_reward = results_no_reward["lick_counts"]
+
     y = results["spike_counts"]
     x = results["lick_counts"]
-    # fig = plt.figure()
-    # plt.scatter(x, y ,label = "Individual trials", marker = "x")
-    # plt.xlabel("Number of licks", fontsize = 12)
-    # plt.ylabel("Number of spikes", fontsize = 12)
-    # plt.title("For each trial of cluster ID {}, lick count vs spike count".format(cell_id), fontsize = 12)
-    # plt.legend()
-    # start with a square Figure
+
     m, b = np.polyfit(x, y, 1)
     fig = plt.figure()
     gs = GridSpec(4,4)
     ax_joint = fig.add_subplot(gs[1:4,0:3])
     ax_marg_x = fig.add_subplot(gs[0,0:3])
     ax_marg_y = fig.add_subplot(gs[1:4,3])
-    ax_joint.scatter(x,y,marker = "x", label = "Individual trials")
+    ax_joint.scatter(x_reward,    y_reward,    marker = "o", c ="g", label = "reward")
+    ax_joint.scatter(x_no_reward, y_no_reward, marker = "o", c ="k", label = "no_reward")
+    ax_joint.legend()
     ax_joint.plot(x, m*x + b, "r-")
     ax_marg_x.hist(x)
     ax_marg_y.hist(y,orientation="horizontal")
@@ -99,7 +107,7 @@ def produce_multi_charts_scatter(cell_id):
 
 # Multiple viz gen
 pdf = matplotlib.backends.backend_pdf.PdfPages("lick_vs_spike.pdf")
-for cell_id in range(30):
+for cell_id in range(data.numofcells):
     fig = produce_multi_charts_scatter(cell_id)
     pdf.savefig(fig)
     plt.close(fig)
