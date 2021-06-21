@@ -2,7 +2,6 @@ import sys
 
 sys.path.insert(1,'/Users/laurencefreeman/Documents/cortexlab/computational_models/Kernel_Regression')
 
-
 import KR_classes as KR
 import numpy as np
 import pandas as pd
@@ -23,7 +22,7 @@ reward_times = np.asarray(trial_df["reward_times"])
 trial_start_times = np.asarray(trial_df["trial_start_times"])
 spike_times = np.asarray(spike_df["Spike_times"])
 spike_clusters = np.asarray(spike_df["cluster_ids"])
-first_lick_df = data.compute_the_first_lick()
+first_lick_df, lick_df = data.compute_the_first_lick()
 first_lick_times = np.asarray(first_lick_df["First Lick Times"])
 
 print("The data has been loaded")
@@ -49,30 +48,50 @@ end_time = np.max(spike_times) + 5  # End-point in seconds of the time period yo
 bins = data.bin_the_session(time_bin, end_time)
 
 """Instantiate synthic class and generated synethic data"""
-# synth_data =       KR.Generate_Synth_Data(end_time, synthetic_trial_number, length)
+synth_data =       KR.Generate_Synth_Data(end_time, synthetic_trial_number, length)
 # reward_times   =   synth_data.generate_event_times() #Generate event times uniformly across the session
 # # first_lick_times = synth_data.generate_event_times() #Use this line to make uncouple lick times from reward
 # first_lick_times = [np.random.default_rng().normal(loc = time, scale = 0.1 ) for time in reward_times] #Create lick times distributed across reward times
-# spike_clusters =   synth_data.generate_unit() #Generate an array of 0's length of spikes
+spike_clusters =   synth_data.generate_unit() #Generate an array of 0's length of spikes
 
 """Create synethic spike times for X"""
-def create_spikes(num_of_spikes):
+# def create_spikes(num_of_spikes):
+#     # #The below code makes a list of lists for spike times such as: [[23s], [34s], [35s]] over a mean of reward time
+#     x = 0 # Create a counter
+#     spike_times = []
+#     while x < num_of_spikes: #Loop until spikes = lenght
+#         for time in reward_times:
+#             y = []
+#             y.insert(0, np.random.default_rng().normal(loc = time, scale = 0.2)) #Create a spike with time as the mean
+#             spike_times.insert(x, y) #Here, 2nd arg is inserted to the list at the 1st arg index using the counter
+#             x += 1
+#             assert x <= num_of_spikes, "loop broken"
+#
+#     spike_times = np.asarray(spike_times)
+#     spike_times = spike_times[:length]
+#
+#     return(spike_times)
+
+# spike_times = create_spikes(length)
+
+"""Create synethic spike times for X using new gama distbution technqiue"""
+def create_spikes_gama(num_of_spikes, behavioural_event):
     # #The below code makes a list of lists for spike times such as: [[23s], [34s], [35s]] over a mean of reward time
     x = 0 # Create a counter
     spike_times = []
     while x < num_of_spikes: #Loop until spikes = lenght
-        for time in reward_times:
+        for time in behavioural_event:
             y = []
-            y.insert(0, np.random.default_rng().normal(loc = time, scale = 0.2)) #Create a spike with time as the mean
+            y.insert(0, ((np.random.default_rng().gamma(2,1)) + time)) #reward time + gama distributed random variable
             spike_times.insert(x, y) #Here, 2nd arg is inserted to the list at the 1st arg index using the counter
             x += 1
-            assert x <= num_of_spikes, "loop broken"
+            # assert x <= num_of_spikes, "loop broken"
 
     spike_times = np.asarray(spike_times)
     spike_times = spike_times[:length]
 
     return(spike_times)
-# spike_times = create_spikes(length)
+spike_times = create_spikes_gama(length, first_lick_times)
 
 """_Create the Y output_"""
 spike_data = pd.DataFrame(spike_times, columns = ["spike_times"])
@@ -131,16 +150,25 @@ def multi_graph(cell_ID):
     # R1 = np.corrcoef(design_matrix_reward_new, design_matrix_lick_new, rowvar=False)
     # sns.heatmap(R1, cmap = "GnBu", yticklabels=False, xticklabels=False)
     # plt.title("Correlation coefficient matrix")
-    # plt.show()
+    # # plt.show()
 
     """Set up design matrix to run within sm.GLM"""
     X = sm.add_constant(design_matrix, prepend=False) #prepend=False means a column of ones has been appended to the end for the constant
 
     """Code to run sm.GLM"""
-    model = sm.GLM(Y, X, family = sm.families.Gaussian()).fit()
-    summary_of_model = model.summary()
+    # model = sm.GLM(Y, X, family = sm.families.Gaussian()).fit()
+    # summary_of_model = model.summary()
     # print(summary_of_model)
-    weights = model.params
+    # weights = model.params
+    # weights = np.asarray(weights) #Constant is at the endd of the vector
+
+    model = sm.OLS(Y, X)
+    results = model.fit()
+    print(results.summary())
+
+
+    # print(summary_of_model)
+    weights = results.params
     weights = np.asarray(weights) #Constant is at the endd of the vector
 
     print("Model parameters have been analysed, and weights are now available")
@@ -149,20 +177,19 @@ def multi_graph(cell_ID):
     # predicted_x = model.predict()
 
     """Change x axis to seconds"""
-    # kernel_window_range = np.asarray(kernel_window_range) / 10 # to convert into seconds
+    kernel_window_range_secs = np.asarray(kernel_window_range) / 10 # to convert into seconds
 
     """""Plotting logic"""
-    # plt.figure()
-    # plt.plot(kernel_window_range, weights[:shift_total], label = 'Reward Kernel')
-    # plt.plot(kernel_window_range, weights[shift_total + 1:-2], label = 'Lick Kernel') # Cut last weight off as it's the y intercept
-    # plt.xlabel("Kernel Window (seconds)", fontsize = 12)
-    # plt.ylabel("Coefficients", fontsize = 12)
-    # plt.title("Kernel Regression: cluster ID {} ".format(cell_ID), fontsize = 12)
-    # plt.legend()
-    # plt.axvline(x=0, color = "r", linewidth=0.9)
-    # plt.axhline(y=0, color = "k", linewidth=0.9)
-    # plt.show()
+    plt.figure()
+    plt.plot(kernel_window_range_secs, weights[:shift_total], label = 'Reward Kernel')
+    plt.plot(kernel_window_range_secs, weights[shift_total + 1:-2], label = 'Lick Kernel') # Cut last weight off as it's the y intercept
+    plt.xlabel("Kernel Window (seconds)", fontsize = 12)
+    plt.ylabel("Coefficients", fontsize = 12)
+    plt.title("Kernel Regression: cluster ID {} ".format(cell_ID), fontsize = 12)
+    plt.legend()
+    plt.axvline(x=0, color = "r", linewidth=0.9)
+    plt.axhline(y=0, color = "k", linewidth=0.9)
+    plt.show()
     return(weights, kernel_window_range, shift_total)
 
-# for x in range(200):
-#     multi_graph(x)
+weights, kernel_window_range, shift_total= multi_graph(0)

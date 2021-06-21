@@ -26,6 +26,9 @@ spike_clusters = np.asarray(spike_df["cluster_ids"])
 first_lick_df, lick_df = data.compute_the_first_lick()
 first_lick_times = np.asarray(first_lick_df["First Lick Times"])
 
+#Free parmas
+num_bins = 30
+
 def lock_and_count(spike_df, trial_df, bin_number, ranges, cell_id):
     lock_time = {}
     spike_counts = {}
@@ -34,7 +37,8 @@ def lock_and_count(spike_df, trial_df, bin_number, ranges, cell_id):
         lock_time[trial] = trial_df["reward_times"][trial]
         spike_counts[trial] = fast_histogram.histogram1d(spike_df["Spike_times"]-lock_time[trial], bins=bin_number, range=(ranges[0],ranges[1]))
     return(pd.DataFrame(list(spike_counts.values())))
-spike_matrix = lock_and_count(spike_df, trial_df, 30, [-1,3], 1)
+spike_matrix = lock_and_count(spike_df, trial_df, num_bins, [-1,3], 1)
+# print(spike_matrix)
 
 def lock_and_count_lick(lick_df, trial_df, bin_number, ranges):
     lock_time = {}
@@ -43,7 +47,7 @@ def lock_and_count_lick(lick_df, trial_df, bin_number, ranges):
         lock_time[trial] = trial_df["reward_times"][trial]
         spike_counts[trial] = fast_histogram.histogram1d(lick_df["Time Licking"]-lock_time[trial], bins=bin_number, range=(ranges[0],ranges[1]))
     return(pd.DataFrame(list(spike_counts.values())))
-lick_matrix = lock_and_count_lick(lick_df, trial_df, 30, [-1,3])
+lick_matrix = lock_and_count_lick(lick_df, trial_df, num_bins, [-1,3])
 
 def gen_reward_matrix(trial_df):
     reward_matrix = trial_df
@@ -57,13 +61,22 @@ def gen_reward_matrix(trial_df):
     reward_matrix = reward_matrix.drop(["left_choices", "violations", "reward_times", "trial_start_times", "free"], axis = 1)
     return(reward_matrix)
 
-def single_bin_design_matrix(bin_index):
+def single_bin_design_matrix_FULL(bin_index):
     reward_matrix = gen_reward_matrix(trial_df)
     reward_matrix["licks"] = lick_matrix.iloc[:,bin_index]
+    # print(reward_matrix)
     return(reward_matrix)
 
-def LL_calc(index):
-    dm = single_bin_design_matrix(index)
+def single_bin_design_matrix_REWARD(bin_index):
+    reward_matrix = gen_reward_matrix(trial_df)
+    return(reward_matrix)
+
+def single_bin_design_matrix_LICK(bin_index):
+    lick_vector = pd.DataFrame(lick_matrix.iloc[:,bin_index])
+    return(lick_vector)
+
+def LL_calc(index, model_variant_design_matrix):
+    dm = model_variant_design_matrix(index)
     Y = spike_matrix.iloc[:,index]
     X = sm.add_constant(dm, prepend=False)
     model = sm.OLS(Y, X)
@@ -72,14 +85,22 @@ def LL_calc(index):
     LL = results.llf
     return(LL)
 
-LL = {}
-for x in range(10):
-    LL[x] = LL_calc(x)
+LL_full = {}
+LL_reward = {}
+LL_lick = {}
+for bin in range(num_bins):
+    LL_full[bin] = LL_calc(bin, single_bin_design_matrix_FULL)
+    LL_reward[bin] = LL_calc(bin, single_bin_design_matrix_REWARD)
+    LL_lick[bin] = LL_calc(bin, single_bin_design_matrix_LICK)
 
 """""Plotting logic"""
 plt.figure()
-plt.plot(LL.keys(), LL.values(), label = "1 out of 3 variant models [lick + rewards]")
+
+plt.plot(LL_full.keys(), LL_full.values(), label = "Licks + Reward Model (FULL)")
+plt.plot(LL_reward.keys(), LL_reward.values(), label = "Reward model")
+plt.plot(LL_lick.keys(), LL_lick.values(), label = "Lick model")
 plt.xlabel("Bins", fontsize = 12)
 plt.ylabel("LL", fontsize = 12)
+plt.title("Population level LL calculation for GLM")
 plt.legend()
 plt.show()
