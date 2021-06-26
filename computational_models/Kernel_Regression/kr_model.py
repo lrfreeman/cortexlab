@@ -50,27 +50,27 @@ bins = data.bin_the_session(time_bin, end_time)
 """Instantiate synthic class and generated synethic data"""
 synth_data =       KR.Generate_Synth_Data(end_time, synthetic_trial_number, length)
 # reward_times   =   synth_data.generate_event_times() #Generate event times uniformly across the session
-# # first_lick_times = synth_data.generate_event_times() #Use this line to make uncouple lick times from reward
+first_lick_times = synth_data.generate_event_times() #Use this line to make uncouple lick times from reward
 # first_lick_times = [np.random.default_rng().normal(loc = time, scale = 0.1 ) for time in reward_times] #Create lick times distributed across reward times
 spike_clusters =   synth_data.generate_unit() #Generate an array of 0's length of spikes
 
 """Create synethic spike times for X"""
-# def create_spikes(num_of_spikes):
-#     # #The below code makes a list of lists for spike times such as: [[23s], [34s], [35s]] over a mean of reward time
-#     x = 0 # Create a counter
-#     spike_times = []
-#     while x < num_of_spikes: #Loop until spikes = lenght
-#         for time in reward_times:
-#             y = []
-#             y.insert(0, np.random.default_rng().normal(loc = time, scale = 0.2)) #Create a spike with time as the mean
-#             spike_times.insert(x, y) #Here, 2nd arg is inserted to the list at the 1st arg index using the counter
-#             x += 1
-#             assert x <= num_of_spikes, "loop broken"
-#
-#     spike_times = np.asarray(spike_times)
-#     spike_times = spike_times[:length]
-#
-#     return(spike_times)
+def create_spikes(num_of_spikes):
+    # #The below code makes a list of lists for spike times such as: [[23s], [34s], [35s]] over a mean of reward time
+    x = 0 # Create a counter
+    spike_times = []
+    while x < num_of_spikes: #Loop until spikes = lenght
+        for time in reward_times:
+            y = []
+            y.insert(0, np.random.default_rng().normal(loc = time, scale = 0.2)) #Create a spike with time as the mean
+            spike_times.insert(x, y) #Here, 2nd arg is inserted to the list at the 1st arg index using the counter
+            x += 1
+            # assert x <= num_of_spikes, "loop broken"
+
+    spike_times = np.asarray(spike_times)
+    spike_times = spike_times[:length]
+
+    return(spike_times)
 
 # spike_times = create_spikes(length)
 
@@ -82,7 +82,7 @@ def create_spikes_gama(num_of_spikes, behavioural_event):
     while x < num_of_spikes: #Loop until spikes = lenght
         for time in behavioural_event:
             y = []
-            y.insert(0, ((np.random.default_rng().gamma(2,1)) + time)) #reward time + gama distributed random variable
+            y.insert(0, ((time - np.random.default_rng().gamma(2,1)))) #reward time + gama distributed random variable
             spike_times.insert(x, y) #Here, 2nd arg is inserted to the list at the 1st arg index using the counter
             x += 1
             # assert x <= num_of_spikes, "loop broken"
@@ -91,7 +91,7 @@ def create_spikes_gama(num_of_spikes, behavioural_event):
     spike_times = spike_times[:length]
 
     return(spike_times)
-spike_times = create_spikes_gama(length, first_lick_times)
+spike_times = create_spikes_gama(length, reward_times)
 
 """_Create the Y output_"""
 spike_data = pd.DataFrame(spike_times, columns = ["spike_times"])
