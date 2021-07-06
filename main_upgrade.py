@@ -6,12 +6,26 @@ import chart_generation as charts
 start_time = time.time()
 
 #Load the data - computes: self.trial_df, spike_df, brain_regions
-data = util.Upload_Data(session_data = '/Users/laurencefreeman/Documents/thesis_data/processed_physdata_v1/aligned_physdata_KM011_2020-03-20_probe1.mat',
+data = util.Upload_Data(session_data = '/Users/laurencefreeman/Documents/thesis_data/processed_physdata_v1/aligned_physdata_KM011_2020-03-23_probe1.mat',
                         frame_alignment_data = '/Users/laurencefreeman/Documents/thesis_data/KM011_video_timestamps/2020-03-23/face_timeStamps.mat',
                         dlc_video_csv = '/Users/laurencefreeman/Documents/thesis_data/23_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv')
 
-charts.generate_PSTH(data.trial_df, data.spike_df)
+# print(data.trial_df)
+# print(data.firstlick_df)
+# print(data.lick_df)
+# print(data.df)
 
+# print(charts.prep_data_for_raster(data.spike_df, data.trial_df, 2, data.firstlick_df))
+
+
+# charts.generate_PSTH(data.trial_df, data.spike_df, 2)
+charts.gen_event_plot(data.trial_df, data.spike_df, 2, data.firstlick_df)
+
+# print(data.firstlick_df)
+# print(data.lick_df)
+# print(data.df)
+
+"""--------------------------------------"""
 
 # import deepLabCut.is_licking as lick
 # import matplotlib.backends.backend_pdf
