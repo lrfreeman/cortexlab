@@ -65,10 +65,17 @@ def generate_PSTH(trial_df, spike_df, cell_ID):
 """-------------------Raster Logic---------------------------"""
 class Raster:
 
-    def __init__(self, trial_df, spike_df, first_lick_df, brain_regions):
+    def __init__(self,
+                 trial_df,
+                 spike_df,
+                 first_lick_df,
+                 brain_regions,
+                 lick_df):
+
         self.trial_df = trial_df
         self.spike_df = spike_df
         self.first_lick_df = first_lick_df
+        self.lick_df = lick_df
 
         self.add_indexs_to_trial_df()
         self.compute_fastest_lick_by_trial()
@@ -157,9 +164,6 @@ class Raster:
 
     def gen_event_plot(self, cell_ID):
 
-        print("###_/_Program commenced_/_###")
-        print("Cluster id:{}".format(cell_ID))
-
         #Prep data
         self.prep_data_for_raster(cell_ID)
         spikes = self.cherrySpikeValues + self.grapeSpikeValues + self.bothRewardSpikeValues + self.noRewardSpikeValues
@@ -171,25 +175,86 @@ class Raster:
         colorCodesNoReward = [[0,0,0]] * self.len_noRewardSpikeValues
         colorCodes = colorCodesCherry + colorCodesGrape + colorCodesBothReward + colorCodesNoReward
 
-        print("")
-        print("--- %s seconds until eventplot ---" % (time.time() - start_time))
-        print("")
-
         #Outline data for time of first lick
         self.produce_overlay_licking_data_for_raster()
-        x = self.licking_overlay.iloc[:,0]
-        y = self.licking_overlay.index.values
+        x_fastest_lick = self.licking_overlay.iloc[:,0]
+        y_fastest_lick = self.licking_overlay.index.values
+
+        #Index brain region by cluster ID
+        brain_region = self.brain_regions.loc[self.brain_regions.index.values == cell_ID]["regions"].values
+
+        """Uncomment if needing to produce a single raster"""
+        #Outline subplots
+        # fig, (ax1) = plt.subplots(1, sharex=True)
+        #
+        # #Raster
+        # ax1.eventplot(spikes, color=colorCodes)
+        # ax1.scatter(x_fastest_lick,y_fastest_lick, marker = '_', alpha = 0.3, color = 'orange')
+        # ax1.set_xlim(right=3)
+        # ax1.set_xlim(left=-1)
+        # ax1.set(title="Spike raster sorted by lick times. Cluster ID:{}, in region:{}".format(cell_ID, brain_region), xlabel="Time (s)", ylabel="Trials")
+        # ax1.margins(y=0)
+        # plt.show()
+        return(spikes, colorCodes, x_fastest_lick, y_fastest_lick)
+
+"""-------------------Licking Histogram logic--------------------"""
+
+def segment_lick_type(licking_data_frame):
+    cherry_licks_only = licking_data_frame.loc[(licking_data_frame["Cherry Lick"] == 1)]
+    grape_licks_only =  licking_data_frame.loc[(licking_data_frame["Grape Lick"] == 1)]
+    center_licks_only = licking_data_frame.loc[(licking_data_frame["Center Lick"] == 1)]
+    return(cherry_licks_only, grape_licks_only, center_licks_only)
+
+def prep_data_for_histogram(licking_data_frame, trial_df):
+    cherry_licks_only, grape_licks_only, center_licks_only = segment_lick_type(licking_data_frame)
+    cherry_lick_counts, cherry_bin_edges, bin_centres = util.lock_to_reward_and_count_licks(cherry_licks_only, trial_df)
+    grape_lick_counts, grape_bin_edges, bin_centres = util.lock_to_reward_and_count_licks(grape_licks_only, trial_df)
+    centre_lick_counts, cen_bin_edges, bin_centres = util.lock_to_reward_and_count_licks(center_licks_only, trial_df)
+
+    cherry_lick_counts = cherry_lick_counts / len(trial_df)
+    grape_lick_counts = grape_lick_counts / len(trial_df)
+    centre_lick_counts = centre_lick_counts / len(trial_df)
+
+    return(cherry_lick_counts, grape_lick_counts, centre_lick_counts, bin_centres)
+
+"""-------------------Multi plot Logic---------------------------"""
+
+class MultiPLot(Raster):
+
+    def multi_graphs(self, cell_ID):
 
         #Index brain region by cluster ID
         brain_region = self.brain_regions.loc[self.brain_regions.index.values == cell_ID]["regions"].values
 
         #Outline subplots
-        fig, (ax1) = plt.subplots(1, sharex=True)
-        ax1.eventplot(spikes, color=colorCodes)
-        ax1.scatter(x,y, marker = '_', alpha = 0.3, color = 'orange')
-        ax1.set_xlim(right=3)
-        ax1.set_xlim(left=-1)
-        ax1.set(title="Spike raster sorted by lick times. Cluster ID:{}, in region:{}".format(cell_ID, brain_region), xlabel="Time (s)", ylabel="Trials")
-        ax1.margins(y=0)
-        # plt.show()
+        fig, (ax1, ax2, ax3) = plt.subplots(3, sharex=True)
+
+        #PSTH
+        cherry_hertz, grape_hertz, both_reward_hertz, no_reward_hertz, bin_edges, bin_centres = calculate_firing_rates_for_PSTH(self.trial_df, self.spike_df, cell_ID)
+        ax1.plot(bin_centres,cherry_hertz[:-1], color='r', label="Cherry Reward")
+        ax1.plot(bin_centres,grape_hertz[:-1], color='m', label="Grape Reward" )
+        ax1.plot(bin_centres,both_reward_hertz[:-1], color='b', label="Both Reward")
+        ax1.plot(bin_centres,no_reward_hertz[:-1], color='k', label="No Reward")
+        ax1.legend(loc='upper right')
+        ax1.set(title="Locked to reward - Cluster ID:{}, in region:{}".format(cell_ID, brain_region), ylabel="Firing Rates (sp/s)")
+
+        #Raster
+        spikes, colorCodes, x_fastest_lick, y_fastest_lick = self.gen_event_plot(cell_ID)
+        ax2.eventplot(spikes, color=colorCodes)
+        ax2.scatter(x_fastest_lick,y_fastest_lick, marker = '_', alpha = 0.3, color = 'orange')
+        ax2.set_xlim(right=3)
+        ax2.set_xlim(left=-1)
+        # ax2.set(title="Spike raster sorted by lick times. Cluster ID:{}, in region:{}".format(cell_ID, brain_region), ylabel="Trials")
+        ax2.margins(y=0)
+
+        #Histogram for licks
+        cherry_lick_counts, grape_lick_counts, center_lick_counts, bin_centres = prep_data_for_histogram(self.lick_df, self.trial_df)
+        ax3.plot(bin_centres, cherry_lick_counts[:-1],  color='r', label="cherry spout")
+        ax3.plot(bin_centres, grape_lick_counts[:-1] ,  color='m', label="grape spout")
+        ax3.plot(bin_centres, center_lick_counts[:-1],  color='k', label="center miss")
+        ax3.set_xlabel("Time (s)", fontsize=10)
+        ax3.set_ylabel("Lick avg per trial", fontsize=10)
+        ax3.legend()
+
+        plt.show()
         return(fig)

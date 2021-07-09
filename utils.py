@@ -2,6 +2,7 @@ import electrophysiology.ingest_timesync as matlab_convert
 import deepLabCut.is_licking as lick
 import fast_histogram
 import numpy as np
+import pandas as pd
 
 """A class to ingest electrophysiology data, frame data and DLC data into three data frames
 1) trial df
@@ -32,7 +33,6 @@ class Upload_Data:
 
         self.first_lick_df = first_lick_df
         self.lick_df = lick_df
-        self.df = df
 
 """Split data by trial type"""
 def split_data_by_trial_type(data_frame):
@@ -78,3 +78,18 @@ def lock_and_sort_for_raster(spike_df,trial_df, cell_ID):
         df = trial_spike_times[trial]
         trial_spike_times[trial] = df[(df > -1) & (df < 5)]
     return(trial_spike_times)
+
+""" Lock spikes to your event and binn for PSTH"""
+def lock_to_reward_and_count_licks(licking_type, trial_df):
+    ranges= [-1,3]
+    bins = np.arange(-1,3,0.2).tolist()
+    lock_time = {}
+    lick_counts = {}
+    for trial in range(len(trial_df)):
+        lock_time[trial] = trial_df["reward_times"][trial]
+        counts = fast_histogram.histogram1d(licking_type["Time Licking"]-lock_time[trial], bins=20, range=(ranges[0],ranges[1]))
+        lick_counts[trial] = counts
+    ignore, bin_edges = np.histogram(licking_type["Time Licking"]-lock_time[trial], bins=bins)
+    bin_centres = 0.5*(bin_edges[1:]+bin_edges[:-1])
+    lick_counts = pd.DataFrame(lick_counts).sum(axis=1)
+    return(lick_counts, bin_edges, bin_centres)
