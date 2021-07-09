@@ -1,4 +1,4 @@
-import PredictLicking.is_licking as lick
+import deepLabCut.is_licking as lick
 import matplotlib.backends.backend_pdf
 import electrophysiology.ingest_timesync as ingest
 from matplotlib.ticker import MaxNLocator
@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import time
-import DLC_Classes as CL
+import deepLabCut.DLC_Classes as CL
 from functools import partial
 import holoviews as hv
 import holoviews.operation.datashader as hd
@@ -25,9 +25,9 @@ start_time = time.time()
 
 """-----------------Load some data-------------------------------"""
 
-data = CL.CortexLab('/Users/laurence/Desktop/Neuroscience/kevin_projects/data/processed_physdata/aligned_physdata_KM011_2020-03-23_probe1.mat',
-                         '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/KM011_video_timestamps/2020-03-23/face_timeStamps.mat',
-                         '/Users/laurence/Desktop/Neuroscience/kevin_projects/data/23_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv')
+data = CL.CortexLab("/Users/laurencefreeman/Documents/thesis_data/processed_physdata_v1/aligned_physdata_KM011_2020-03-20_probe1.mat",
+                    "/Users/laurencefreeman/Documents/thesis_data/KM011_video_timestamps/2020-03-23/face_timeStamps.mat",
+                    "/Users/laurencefreeman/Documents/thesis_data/23_faceDLC_resnet50_Master_ProjectAug13shuffle1_133500.csv")
 
 trial_df, spike_df = data.load_data(data.session_data)
 
@@ -164,7 +164,7 @@ def split_by_cell(cell_ID):
 """-----------------Plot PSTH-------------------------------"""
 
 # Multiple viz gen
-pdf = matplotlib.backends.backend_pdf.PdfPages("output.pdf")
+pdf = matplotlib.backends.backend_pdf.PdfPages("PSTHscgh.pdf")
 # for x in range(data.numofcells):
 for x in range(10):
     fig = split_by_cell(x)
