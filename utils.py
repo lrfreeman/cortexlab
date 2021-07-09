@@ -30,7 +30,7 @@ class Upload_Data:
         lick_df = lick.map_lick_to_trial_type(df,self.session_data)
         first_lick_df = lick.compute_1st_lick(lick_df)
 
-        self.firstlick_df = first_lick_df
+        self.first_lick_df = first_lick_df
         self.lick_df = lick_df
         self.df = df
 
@@ -57,7 +57,7 @@ def lock_to_reward_and_count(spike_df, trial_df, cell_ID):
     bin_centres = 0.5*(bin_edges[1:]+bin_edges[:-1])
     return(spike_counts, bin_edges, bin_centres)
 
-"""Assign spike counts to a trial type by reward"""
+"""Assign spike counts to a trial type by reward for PSTH"""
 # Count things and map them to trials
 def count_to_trial(trial_type_df, spike_counts, trial_df):
     spike_counts_mapped_2_trial_type = [spike_counts[x] for x in range(len(trial_df)) if x in trial_type_df.index.values]
@@ -69,10 +69,12 @@ def lock_and_sort_for_raster(spike_df,trial_df, cell_ID):
     spike_df = spike_df.loc[(spike_df["cluster_ids"] == cell_ID)]
     lock_time = {}
     trial_spike_times = {}
+
     for trial in range(len(trial_df)):
         lock_time[trial] = trial_df["reward_times"][trial]
         trial_spike_times[trial] = spike_df["spike_time"]-lock_time[trial]
-    return(trial_spike_times)
 
-# """Sort raster spikes by quickest lick"""
-# def sort_raster_spikes_by_quickest_lick(first_lick_df, trial_spikes):
+        #Remove spikes outside of time window for performance
+        df = trial_spike_times[trial]
+        trial_spike_times[trial] = df[(df > -1) & (df < 5)]
+    return(trial_spike_times)

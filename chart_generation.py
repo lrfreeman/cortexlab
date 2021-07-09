@@ -65,7 +65,7 @@ def generate_PSTH(trial_df, spike_df, cell_ID):
 """-------------------Raster Logic---------------------------"""
 class Raster:
 
-    def __init__(self, trial_df, spike_df, first_lick_df):
+    def __init__(self, trial_df, spike_df, first_lick_df, brain_regions):
         self.trial_df = trial_df
         self.spike_df = spike_df
         self.first_lick_df = first_lick_df
@@ -78,6 +78,8 @@ class Raster:
         self.grape_reward_trials = grape_reward_trials
         self.both_reward_trials = both_reward_trials
         self.no_reward_trials = no_reward_trials
+
+        self.brain_regions = brain_regions
 
     def add_indexs_to_trial_df(self):
         self.trial_df["index"] = self.trial_df.index
@@ -109,19 +111,28 @@ class Raster:
         #Sort dictionary
         DIC_spike_dfs_sorted_by_fastest_lick = {k: v for k, v in sorted(DIC_spike_dfs_by_trial_index.items(), key=lambda item: item[0])}
 
+        #Create a dataframe which will act as the scatter points for overlaying first lick on the raster
+        sorted_first_lick_df = pd.DataFrame(DIC_spike_dfs_sorted_by_fastest_lick.keys())
+
         #Name the sorted spike dataframes for the raster by trial
         sorted_spike_data_frames = DIC_spike_dfs_sorted_by_fastest_lick.values()
 
-        return(sorted_spike_data_frames)
+        return(sorted_spike_data_frames, sorted_first_lick_df)
 
     def prep_data_for_raster(self, cell_ID):
 
         spikes_mapped_to_trials = util.lock_and_sort_for_raster(self.spike_df, self.trial_df, cell_ID)
 
-        cherrySpikeValues =     self.sort_spikes_by_fastest_lick(self.cherry_reward_trials, spikes_mapped_to_trials)
-        grapeSpikeValues =      self.sort_spikes_by_fastest_lick(self.grape_reward_trials, spikes_mapped_to_trials)
-        bothRewardSpikeValues = self.sort_spikes_by_fastest_lick(self.both_reward_trials, spikes_mapped_to_trials)
-        noRewardSpikeValues =   self.sort_spikes_by_fastest_lick(self.no_reward_trials, spikes_mapped_to_trials)
+        cherrySpikeValues, sorted_fastest_lick_df_cherry_trials          = self.sort_spikes_by_fastest_lick(self.cherry_reward_trials, spikes_mapped_to_trials)
+        grapeSpikeValues, sorted_fastest_lick_df_grape_trials            = self.sort_spikes_by_fastest_lick(self.grape_reward_trials, spikes_mapped_to_trials)
+        bothRewardSpikeValues, sorted_fastest_lick_df_bothrewards_trials = self.sort_spikes_by_fastest_lick(self.both_reward_trials, spikes_mapped_to_trials)
+        noRewardSpikeValues, sorted_fastest_lick_df_noreward_trials      = self.sort_spikes_by_fastest_lick(self.no_reward_trials, spikes_mapped_to_trials)
+
+        #Assign fastest lick df to object for another function to processed
+        self.sorted_fastest_lick_df_cherry_trials      = sorted_fastest_lick_df_cherry_trials
+        self.sorted_fastest_lick_df_grape_trials       = sorted_fastest_lick_df_grape_trials
+        self.sorted_fastest_lick_df_bothrewards_trials = sorted_fastest_lick_df_bothrewards_trials
+        self.sorted_fastest_lick_df_noreward_trials    = sorted_fastest_lick_df_noreward_trials
 
         self.cell_id = cell_ID
 
@@ -139,11 +150,15 @@ class Raster:
         assert len(cherrySpikeValues) + len(grapeSpikeValues) + len(bothRewardSpikeValues) + len(noRewardSpikeValues) == len(self.first_lick_df.index.values), "Len of trials does not match number of 1st licks"
 
     def produce_overlay_licking_data_for_raster(self):
-        dataframe = self.first_lick_df.sort_values('lick gap', ascending = False)
-        self.licking_overlay = dataframe
-        print("Lenght of licking trials", len(dataframe))
+        self.licking_overlay = pd.concat([self.sorted_fastest_lick_df_cherry_trials,
+                               self.sorted_fastest_lick_df_grape_trials,
+                               self.sorted_fastest_lick_df_bothrewards_trials,
+                               self.sorted_fastest_lick_df_noreward_trials], ignore_index=True)
 
     def gen_event_plot(self, cell_ID):
+
+        print("###_/_Program commenced_/_###")
+        print("Cluster id:{}".format(cell_ID))
 
         #Prep data
         self.prep_data_for_raster(cell_ID)
@@ -162,16 +177,19 @@ class Raster:
 
         #Outline data for time of first lick
         self.produce_overlay_licking_data_for_raster()
-        x = self.licking_overlay["lick gap"]
-        y = self.licking_overlay["index"]
+        x = self.licking_overlay.iloc[:,0]
+        y = self.licking_overlay.index.values
+
+        #Index brain region by cluster ID
+        brain_region = self.brain_regions.loc[self.brain_regions.index.values == cell_ID]["regions"].values
 
         #Outline subplots
         fig, (ax1) = plt.subplots(1, sharex=True)
         ax1.eventplot(spikes, color=colorCodes)
-        # ax1.scatter(x,y, marker = '_')
+        ax1.scatter(x,y, marker = '_', alpha = 0.3, color = 'orange')
         ax1.set_xlim(right=3)
         ax1.set_xlim(left=-1)
-        ax1.set(title="Spike Raster - Cell:{}".format(cell_ID), xlabel="Time (s)", ylabel="Trials")
-        ax1.margins(x=0)
-        plt.show()
+        ax1.set(title="Spike raster sorted by lick times. Cluster ID:{}, in region:{}".format(cell_ID, brain_region), xlabel="Time (s)", ylabel="Trials")
+        ax1.margins(y=0)
+        # plt.show()
         return(fig)
