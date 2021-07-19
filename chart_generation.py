@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import math
 import time
+import fast_histogram
 
 #Performance checks
 start_time = time.time()
@@ -17,7 +18,8 @@ start_time = time.time()
 def prep_data_for_PSTH(trial_df, spike_df, cell_ID):
 
     cherry_reward_trials, grape_reward_trials, both_reward_trials, no_reward_trials = util.split_data_by_trial_type(trial_df)
-    spike_counts, bin_edges, bin_centres = util.lock_to_reward_and_count(spike_df, trial_df, cell_ID)
+    indexed_spikes_to_trials = util.index_spikesPoints_to_trial(spike_df,trial_df, cell_ID)
+    spike_counts, bin_edges, bin_centres = util.lock_to_reward_and_count(indexed_spikes_to_trials, trial_df, cell_ID)
     cherry_spike_counts = util.count_to_trial(cherry_reward_trials, spike_counts, trial_df)
     grape_spike_counts = util.count_to_trial(grape_reward_trials, spike_counts, trial_df)
     both_reward_spike_counts = util.count_to_trial(both_reward_trials, spike_counts, trial_df)
@@ -128,18 +130,26 @@ class Raster:
 
     def prep_data_for_raster(self, cell_ID):
 
-        spikes_mapped_to_trials = util.lock_and_sort_for_raster(self.spike_df, self.trial_df, cell_ID)
+        indexed_spikes_to_trials = util.index_spikesPoints_to_trial(self.spike_df, self.trial_df, cell_ID)
+        spikes_mapped_to_trials = util.lock_and_sort_for_raster(indexed_spikes_to_trials, self.trial_df, cell_ID)
 
-        cherrySpikeValues, sorted_fastest_lick_df_cherry_trials          = self.sort_spikes_by_fastest_lick(self.cherry_reward_trials, spikes_mapped_to_trials)
-        grapeSpikeValues, sorted_fastest_lick_df_grape_trials            = self.sort_spikes_by_fastest_lick(self.grape_reward_trials, spikes_mapped_to_trials)
-        bothRewardSpikeValues, sorted_fastest_lick_df_bothrewards_trials = self.sort_spikes_by_fastest_lick(self.both_reward_trials, spikes_mapped_to_trials)
-        noRewardSpikeValues, sorted_fastest_lick_df_noreward_trials      = self.sort_spikes_by_fastest_lick(self.no_reward_trials, spikes_mapped_to_trials)
+        self.spike_dictionary = spikes_mapped_to_trials
 
-        #Assign fastest lick df to object for another function to processed
-        self.sorted_fastest_lick_df_cherry_trials      = sorted_fastest_lick_df_cherry_trials
-        self.sorted_fastest_lick_df_grape_trials       = sorted_fastest_lick_df_grape_trials
-        self.sorted_fastest_lick_df_bothrewards_trials = sorted_fastest_lick_df_bothrewards_trials
-        self.sorted_fastest_lick_df_noreward_trials    = sorted_fastest_lick_df_noreward_trials
+        cherrySpikeValues       = util.count_to_trial(self.cherry_reward_trials, spikes_mapped_to_trials, self.trial_df)
+        grapeSpikeValues        = util.count_to_trial(self.grape_reward_trials,  spikes_mapped_to_trials, self.trial_df)
+        bothRewardSpikeValues   = util.count_to_trial(self.both_reward_trials,   spikes_mapped_to_trials, self.trial_df)
+        noRewardSpikeValues     = util.count_to_trial(self.no_reward_trials,     spikes_mapped_to_trials, self.trial_df)
+
+        # cherrySpikeValues, sorted_fastest_lick_df_cherry_trials          = self.sort_spikes_by_fastest_lick(self.cherry_reward_trials, spikes_mapped_to_trials)
+        # grapeSpikeValues, sorted_fastest_lick_df_grape_trials            = self.sort_spikes_by_fastest_lick(self.grape_reward_trials, spikes_mapped_to_trials)
+        # bothRewardSpikeValues, sorted_fastest_lick_df_bothrewards_trials = self.sort_spikes_by_fastest_lick(self.both_reward_trials, spikes_mapped_to_trials)
+        # noRewardSpikeValues, sorted_fastest_lick_df_noreward_trials      = self.sort_spikes_by_fastest_lick(self.no_reward_trials, spikes_mapped_to_trials)
+        #
+        # #Assign fastest lick df to object for another function to processed
+        # self.sorted_fastest_lick_df_cherry_trials      = sorted_fastest_lick_df_cherry_trials
+        # self.sorted_fastest_lick_df_grape_trials       = sorted_fastest_lick_df_grape_trials
+        # self.sorted_fastest_lick_df_bothrewards_trials = sorted_fastest_lick_df_bothrewards_trials
+        # self.sorted_fastest_lick_df_noreward_trials    = sorted_fastest_lick_df_noreward_trials
 
         self.cell_id = cell_ID
 
@@ -154,7 +164,7 @@ class Raster:
         self.len_noRewardSpikeValues =   len(noRewardSpikeValues)
 
         #Check that the number of trials matches the number of first licks
-        assert len(cherrySpikeValues) + len(grapeSpikeValues) + len(bothRewardSpikeValues) + len(noRewardSpikeValues) == len(self.first_lick_df.index.values), "Len of trials does not match number of 1st licks"
+        # assert len(cherrySpikeValues) + len(grapeSpikeValues) + len(bothRewardSpikeValues) + len(noRewardSpikeValues) == len(self.first_lick_df.index.values), "Len of trials does not match number of 1st licks"
 
     def produce_overlay_licking_data_for_raster(self):
         self.licking_overlay = pd.concat([self.sorted_fastest_lick_df_cherry_trials,
@@ -175,13 +185,13 @@ class Raster:
         colorCodesNoReward = [[0,0,0]] * self.len_noRewardSpikeValues
         colorCodes = colorCodesCherry + colorCodesGrape + colorCodesBothReward + colorCodesNoReward
 
-        #Outline data for time of first lick
-        self.produce_overlay_licking_data_for_raster()
-        x_fastest_lick = self.licking_overlay.iloc[:,0]
-        y_fastest_lick = self.licking_overlay.index.values
+        # #Outline data for time of first lick
+        # self.produce_overlay_licking_data_for_raster()
+        # x_fastest_lick = self.licking_overlay.iloc[:,0]
+        # y_fastest_lick = self.licking_overlay.index.values
 
-        #Index brain region by cluster ID
-        brain_region = self.brain_regions.loc[self.brain_regions.index.values == cell_ID]["regions"].values
+        #Index brain region by cluster ID - Uncomment for signle raster
+        # brain_region = self.brain_regions.loc[self.brain_regions.index.values == cell_ID]["regions"].values
 
         """Uncomment if needing to produce a single raster"""
         #Outline subplots
@@ -195,27 +205,57 @@ class Raster:
         # ax1.set(title="Spike raster sorted by lick times. Cluster ID:{}, in region:{}".format(cell_ID, brain_region), xlabel="Time (s)", ylabel="Trials")
         # ax1.margins(y=0)
         # plt.show()
-        return(spikes, colorCodes, x_fastest_lick, y_fastest_lick)
+        return(spikes, colorCodes)
+
 
 """-------------------Licking Histogram logic--------------------"""
 
-def segment_lick_type(licking_data_frame):
+def segment_lick_type(trial_df, licking_data_frame):
+    x = trial_df[["trial_start_times", "index"]]
+    licking_data_frame = licking_data_frame.merge(x, how = 'left', on = "trial_start_times")
+
     cherry_licks_only = licking_data_frame.loc[(licking_data_frame["Cherry Lick"] == 1)]
     grape_licks_only =  licking_data_frame.loc[(licking_data_frame["Grape Lick"] == 1)]
     center_licks_only = licking_data_frame.loc[(licking_data_frame["Center Lick"] == 1)]
+
+    assert len(cherry_licks_only) + len(grape_licks_only) + len(center_licks_only) == len(licking_data_frame), "Total number of licks don't match length of licking dataframe"
     return(cherry_licks_only, grape_licks_only, center_licks_only)
 
 def prep_data_for_histogram(licking_data_frame, trial_df):
-    cherry_licks_only, grape_licks_only, center_licks_only = segment_lick_type(licking_data_frame)
+    cherry_licks_only, grape_licks_only, center_licks_only = segment_lick_type(trial_df, licking_data_frame)
     cherry_lick_counts, cherry_bin_edges, bin_centres = util.lock_to_reward_and_count_licks(cherry_licks_only, trial_df)
     grape_lick_counts, grape_bin_edges, bin_centres = util.lock_to_reward_and_count_licks(grape_licks_only, trial_df)
     centre_lick_counts, cen_bin_edges, bin_centres = util.lock_to_reward_and_count_licks(center_licks_only, trial_df)
 
-    cherry_lick_counts = cherry_lick_counts / len(trial_df)
-    grape_lick_counts = grape_lick_counts / len(trial_df)
+    cherry_trial,grape_trial,both_reward_trials,no_reward_trials = util.split_data_by_trial_type(licking_data_frame)
+
+
+    cherry_lick_counts = cherry_lick_counts / len(cherry_trial.values) * 100
+    grape_lick_counts = grape_lick_counts / len(grape_trial.values) * 100
     centre_lick_counts = centre_lick_counts / len(trial_df)
 
     return(cherry_lick_counts, grape_lick_counts, centre_lick_counts, bin_centres)
+
+
+"""-------Lick triggered average PSTH-----------------------------"""
+class PSTH(Raster):
+
+    def lick_triggered_average(self, cell_ID):
+        spike_df = self.spike_df.loc[(self.spike_df["cluster_ids"] == cell_ID)]
+        lick_locked_dictionary = {}
+        lock_time = {}
+        ranges= [-1,3]
+        for lick in np.asarray(self.lick_df["Time Licking"]):
+            lock_time[lick] = lick
+            lick_locked_dictionary[lick] = fast_histogram.histogram1d(self.spike_df["spike_time"] - lock_time[lick],
+                                                                      bins=20,
+                                                                      range=(ranges[0],ranges[1]))
+        lick_triggered_average = pd.DataFrame(lick_locked_dictionary).T.sum(axis=0)
+        self.lick_triggered_average = lick_triggered_average
+        return(lick_triggered_average)
+
+    def normalise_lick_trig_PST(self):
+        self.lick_triggered_average = (self.lick_triggered_average / len(self.spike_df)) * 5 #200ms bin
 
 """-------------------Multi plot Logic---------------------------"""
 
@@ -227,7 +267,7 @@ class MultiPLot(Raster):
         brain_region = self.brain_regions.loc[self.brain_regions.index.values == cell_ID]["regions"].values
 
         #Outline subplots
-        fig, (ax1, ax2, ax3) = plt.subplots(3, sharex=True)
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, sharex=True)
 
         #PSTH
         cherry_hertz, grape_hertz, both_reward_hertz, no_reward_hertz, bin_edges, bin_centres = calculate_firing_rates_for_PSTH(self.trial_df, self.spike_df, cell_ID)
@@ -237,24 +277,40 @@ class MultiPLot(Raster):
         ax1.plot(bin_centres,no_reward_hertz[:-1], color='k', label="No Reward")
         ax1.legend(loc='upper right')
         ax1.set(title="Locked to reward - Cluster ID:{}, in region:{}".format(cell_ID, brain_region), ylabel="Firing Rates (sp/s)")
+        ax1.margins(y=0)
 
-        #Raster
-        spikes, colorCodes, x_fastest_lick, y_fastest_lick = self.gen_event_plot(cell_ID)
-        ax2.eventplot(spikes, color=colorCodes)
-        ax2.scatter(x_fastest_lick,y_fastest_lick, marker = '_', alpha = 0.3, color = 'orange')
-        ax2.set_xlim(right=3)
+        #Raster Spikes
+        spikes, colorCodes = self.gen_event_plot(cell_ID)
+        # ax2.eventplot(spikes, color=colorCodes)
+        ax2.eventplot(self.spike_dictionary.values(), colors="black")
+        # ax2.scatter(x_fastest_lick,y_fastest_lick, marker = '_', alpha = 0.3, color = 'orange')
+        ax2.set_xlim(right=1)
         ax2.set_xlim(left=-1)
+        ax2.set_ylabel("Trial num", fontsize=10)
         # ax2.set(title="Spike raster sorted by lick times. Cluster ID:{}, in region:{}".format(cell_ID, brain_region), ylabel="Trials")
         ax2.margins(y=0)
+
+        #Lick raster
+        licks_2_trial = util.licks_to_trial_locked_to_reward(self.lick_df, self.trial_df)
+        y = licks_2_trial.keys()
+        x = licks_2_trial.values()
+        ax2.eventplot(x, linewidth = 3)
 
         #Histogram for licks
         cherry_lick_counts, grape_lick_counts, center_lick_counts, bin_centres = prep_data_for_histogram(self.lick_df, self.trial_df)
         ax3.plot(bin_centres, cherry_lick_counts[:-1],  color='r', label="cherry spout")
         ax3.plot(bin_centres, grape_lick_counts[:-1] ,  color='m', label="grape spout")
-        ax3.plot(bin_centres, center_lick_counts[:-1],  color='k', label="center miss")
-        ax3.set_xlabel("Time (s)", fontsize=10)
-        ax3.set_ylabel("Lick avg per trial", fontsize=10)
+        # ax3.plot(bin_centres, center_lick_counts[:-1],  color='k', label="center miss")
+        # ax3.set_xlabel("Time (s)", fontsize=10)
+        ax3.set_ylabel("%of lick frames", fontsize=10)
         ax3.legend()
+        ax3.margins(y=0)
+
+        #Lick triggered lick_triggered_average
+        PSTH.lick_triggered_average(self, cell_ID)
+        PSTH.normalise_lick_trig_PST(self)
+        ax4.plot(bin_centres, self.lick_triggered_average[:-1])
+        ax4.set_xlabel("Time (s)", fontsize=10)
 
         plt.show()
         return(fig)
