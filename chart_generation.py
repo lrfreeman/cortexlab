@@ -5,20 +5,19 @@ import numpy as np
 import math
 import time
 import fast_histogram
+import random
 
 #Performance checks
 start_time = time.time()
 
 #Improvements to make
-#1) functions being called twice affecting performance
-#2) If I remove all spikes out of the range of -1 to 3s, from original data frame,
-#surely it will be much faster
+#1) Double check logic for lick raster overlay
 
 """-------------------PSTH Logic-----------------------------"""
 def prep_data_for_PSTH(trial_df, spike_df, cell_ID):
 
     cherry_reward_trials, grape_reward_trials, both_reward_trials, no_reward_trials = util.split_data_by_trial_type(trial_df)
-    indexed_spikes_to_trials = util.index_spikesPoints_to_trial(spike_df,trial_df, cell_ID)
+    indexed_spikes_to_trials = util.index_spikesPoints_to_trial(spike_df,trial_df)
     spike_counts, bin_edges, bin_centres = util.lock_to_reward_and_count(indexed_spikes_to_trials, trial_df, cell_ID)
     cherry_spike_counts = util.count_to_trial(cherry_reward_trials, spike_counts, trial_df)
     grape_spike_counts = util.count_to_trial(grape_reward_trials, spike_counts, trial_df)
@@ -130,7 +129,7 @@ class Raster:
 
     def prep_data_for_raster(self, cell_ID):
 
-        indexed_spikes_to_trials = util.index_spikesPoints_to_trial(self.spike_df, self.trial_df, cell_ID)
+        indexed_spikes_to_trials = util.index_spikesPoints_to_trial(self.spike_df, self.trial_df)
         spikes_mapped_to_trials = util.lock_and_sort_for_raster(indexed_spikes_to_trials, self.trial_df, cell_ID)
 
         self.spike_dictionary = spikes_mapped_to_trials
@@ -230,9 +229,9 @@ def prep_data_for_histogram(licking_data_frame, trial_df):
     cherry_trial,grape_trial,both_reward_trials,no_reward_trials = util.split_data_by_trial_type(licking_data_frame)
 
 
-    cherry_lick_counts = cherry_lick_counts / len(cherry_trial.values) * 100
-    grape_lick_counts = grape_lick_counts / len(grape_trial.values) * 100
-    centre_lick_counts = centre_lick_counts / len(trial_df)
+    cherry_lick_counts = cherry_lick_counts / len(licking_data_frame) * 5
+    grape_lick_counts = grape_lick_counts / len(licking_data_frame) * 5
+    centre_lick_counts = centre_lick_counts / len(licking_data_frame) * 5
 
     return(cherry_lick_counts, grape_lick_counts, centre_lick_counts, bin_centres)
 
@@ -240,22 +239,43 @@ def prep_data_for_histogram(licking_data_frame, trial_df):
 """-------Lick triggered average PSTH-----------------------------"""
 class PSTH(Raster):
 
-    def lick_triggered_average(self, cell_ID):
-        spike_df = self.spike_df.loc[(self.spike_df["cluster_ids"] == cell_ID)]
+    def divide_licks_pre_and_post_reward(self):
+        #Append trial index to each lick
+        x = self.trial_df[["trial_start_times", "index"]]
+        new_lick_df = self.lick_df.merge(x, how = 'left', on = "trial_start_times")
+        self.extended_lick_df_by_index = new_lick_df
+
+        #Seperate lick types
+        pre_reward_licks = new_lick_df.loc[new_lick_df["reward_times"] > new_lick_df["Time Licking"]]
+        post_reward_licks = new_lick_df.loc[new_lick_df["reward_times"] < new_lick_df["Time Licking"]]
+        return(pre_reward_licks, post_reward_licks)
+
+    def lick_triggered_average(self, lick_type, cell_ID):
+
+        #Call function to assign trial indexs to each spike
+        spike_df = util.index_spikesPoints_to_trial(self.spike_df, self.trial_df)
+
+        #Filter PSTH by cell
+        spike_df = spike_df.loc[(spike_df["cluster_ids"] == cell_ID)]
+
+        #Histogram logic
         lick_locked_dictionary = {}
         lock_time = {}
         ranges= [-1,3]
-        for lick in np.asarray(self.lick_df["Time Licking"]):
-            lock_time[lick] = lick
-            lick_locked_dictionary[lick] = fast_histogram.histogram1d(self.spike_df["spike_time"] - lock_time[lick],
+        i = 0
+        while i < 1000:
+            i += 1
+            lock_time[i] = random.choice(list(lick_type["Time Licking"]))
+            trial_id = lick_type.loc[lick_type["Time Licking"] == lock_time[i]]["index"].values[0]
+            trial_spikes = spike_df.loc[spike_df["index"] == trial_id]["spike_time"].values
+            lick_locked_dictionary[i] = fast_histogram.histogram1d(trial_spikes - lock_time[i],
                                                                       bins=20,
                                                                       range=(ranges[0],ranges[1]))
         lick_triggered_average = pd.DataFrame(lick_locked_dictionary).T.sum(axis=0)
-        self.lick_triggered_average = lick_triggered_average
-        return(lick_triggered_average)
 
-    def normalise_lick_trig_PST(self):
-        self.lick_triggered_average = (self.lick_triggered_average / len(self.spike_df)) * 5 #200ms bin
+        #Normalise
+        lick_triggered_average = (lick_triggered_average / 1000) * 5 #200ms bin
+        return(lick_triggered_average)
 
 """-------------------Multi plot Logic---------------------------"""
 
@@ -267,7 +287,9 @@ class MultiPLot(Raster):
         brain_region = self.brain_regions.loc[self.brain_regions.index.values == cell_ID]["regions"].values
 
         #Outline subplots
-        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, sharex=True)
+        fig, (ax1, ax2, ax3) = plt.subplots(3, sharex=True)
+
+        fig.suptitle("Cluster ID:{}, in region:{}".format(cell_ID, brain_region), fontsize=16)
 
         #PSTH
         cherry_hertz, grape_hertz, both_reward_hertz, no_reward_hertz, bin_edges, bin_centres = calculate_firing_rates_for_PSTH(self.trial_df, self.spike_df, cell_ID)
@@ -276,17 +298,17 @@ class MultiPLot(Raster):
         ax1.plot(bin_centres,both_reward_hertz[:-1], color='b', label="Both Reward")
         ax1.plot(bin_centres,no_reward_hertz[:-1], color='k', label="No Reward")
         ax1.legend(loc='upper right')
-        ax1.set(title="Locked to reward - Cluster ID:{}, in region:{}".format(cell_ID, brain_region), ylabel="Firing Rates (sp/s)")
+        # ax1.set_title("Reward triggered avg.", fontsize=5)
+        ax1.set_ylabel("spikes / s", fontsize=10)
         ax1.margins(y=0)
+        ax1.set_xlim(right=0.5)
+        ax1.set_xlim(left=-0.5)
 
         #Raster Spikes
         spikes, colorCodes = self.gen_event_plot(cell_ID)
         # ax2.eventplot(spikes, color=colorCodes)
         ax2.eventplot(self.spike_dictionary.values(), colors="black")
-        # ax2.scatter(x_fastest_lick,y_fastest_lick, marker = '_', alpha = 0.3, color = 'orange')
-        ax2.set_xlim(right=1)
-        ax2.set_xlim(left=-1)
-        ax2.set_ylabel("Trial num", fontsize=10)
+        ax2.set_ylabel("Trial #", fontsize=10)
         # ax2.set(title="Spike raster sorted by lick times. Cluster ID:{}, in region:{}".format(cell_ID, brain_region), ylabel="Trials")
         ax2.margins(y=0)
 
@@ -294,23 +316,34 @@ class MultiPLot(Raster):
         licks_2_trial = util.licks_to_trial_locked_to_reward(self.lick_df, self.trial_df)
         y = licks_2_trial.keys()
         x = licks_2_trial.values()
-        ax2.eventplot(x, linewidth = 3)
+        ax2.eventplot(x, linewidth = 3, colors="orange")
 
-        #Histogram for licks
+        # #Histogram for licks
         cherry_lick_counts, grape_lick_counts, center_lick_counts, bin_centres = prep_data_for_histogram(self.lick_df, self.trial_df)
         ax3.plot(bin_centres, cherry_lick_counts[:-1],  color='r', label="cherry spout")
         ax3.plot(bin_centres, grape_lick_counts[:-1] ,  color='m', label="grape spout")
-        # ax3.plot(bin_centres, center_lick_counts[:-1],  color='k', label="center miss")
-        # ax3.set_xlabel("Time (s)", fontsize=10)
-        ax3.set_ylabel("%of lick frames", fontsize=10)
-        ax3.legend()
+        ax3.plot(bin_centres, center_lick_counts[:-1],  color='k', label="center miss")
+        ax3.set_ylabel("% of lick frames / s ", fontsize=10)
+        ax3.legend(loc='upper right')
         ax3.margins(y=0)
+        ax3.set_xlabel("Time from reward delivery (s)", fontsize=10)
 
-        #Lick triggered lick_triggered_average
-        PSTH.lick_triggered_average(self, cell_ID)
-        PSTH.normalise_lick_trig_PST(self)
-        ax4.plot(bin_centres, self.lick_triggered_average[:-1])
-        ax4.set_xlabel("Time (s)", fontsize=10)
+        # #Lick triggered lick_triggered_average pre reward
+        # pre_reward_licks, post_reward_licks = PSTH.divide_licks_pre_and_post_reward(self)
+        # pre_reward_average = PSTH.lick_triggered_average(self, pre_reward_licks, cell_ID)
+        # ax4.plot(bin_centres, pre_reward_average[:-1], label="pre-reward licks")
+        # ax4.set_title("Lick triggered avg.", fontsize=15)
+        # ax4.set_ylabel("spikes / s", fontsize=10)
+        # ax4.legend()
+        # ax4.set_xlim(right=1)
+        # ax4.set_xlim(left=-1)
+        #
+        # #Lick triggered lick_triggered_average pre reward
+        # post_reward_average = PSTH.lick_triggered_average(self, post_reward_licks, cell_ID)
+        # ax5.plot(bin_centres, post_reward_average[:-1], label="post-reward licks")
+        # ax5.set_xlabel("Time from lick (s)", fontsize=10)
+        # ax5.set_ylabel("spikes / s", fontsize=10)
+        # ax5.legend()
 
         plt.show()
         return(fig)

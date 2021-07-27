@@ -36,7 +36,7 @@ class ProcessData:
         df = lick.generate_licking_times(frame_times, self.dlc_video_csv)
         lick_df = lick.map_lick_to_trial_type(df,self.session_data)
         first_lick_df = lick.compute_1st_lick(lick_df)
-        return(first_lick_df)
+        return(first_lick_df, lick_df)
 
 class Generate_Synth_Data:
     def __init__(self,
